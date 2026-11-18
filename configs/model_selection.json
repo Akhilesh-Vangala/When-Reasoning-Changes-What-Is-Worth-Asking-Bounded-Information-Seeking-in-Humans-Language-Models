@@ -1,0 +1,83 @@
+{
+  "decided": "2026-11-17",
+  "rule": "floor: format compliance >= 0.9 and identification above chance (spec 7.1); fixed before any B1 run",
+  "smoke_results": {
+    "qwen3-32b": {
+      "model": "qwen3-32b",
+      "calls": 100,
+      "format_compliance": 0.95,
+      "format_by_task": {
+        "classify": 1.0,
+        "identify": 0.9,
+        "guess": 0.95
+      },
+      "classify_balanced_accuracy": 0.674,
+      "identify_accuracy": 0.175,
+      "identify_chance": 0.03,
+      "guess_consistent_rate": 0.45,
+      "median_completion_tokens": 1564.5,
+      "passes_floor": true
+    },
+    "gpt-oss-120b": {
+      "model": "gpt-oss-120b",
+      "calls": 100,
+      "format_compliance": 0.96,
+      "format_by_task": {
+        "classify": 1.0,
+        "identify": 0.9,
+        "guess": 1.0
+      },
+      "classify_balanced_accuracy": 1.0,
+      "identify_accuracy": 0.825,
+      "identify_chance": 0.03,
+      "guess_consistent_rate": 0.75,
+      "median_completion_tokens": 1606.5,
+      "passes_floor": true
+    },
+    "phi-4": {
+      "model": "phi-4",
+      "calls": 100,
+      "format_compliance": 1.0,
+      "format_by_task": {
+        "classify": 1.0,
+        "identify": 1.0,
+        "guess": 1.0
+      },
+      "classify_balanced_accuracy": 0.605,
+      "identify_accuracy": 0.075,
+      "identify_chance": 0.03,
+      "guess_consistent_rate": 0.55,
+      "median_completion_tokens": 661.5,
+      "passes_floor": true
+    },
+    "olmo2-32b": {
+      "model": "olmo2-32b",
+      "calls": 100,
+      "format_compliance": 1.0,
+      "format_by_task": {
+        "classify": 1.0,
+        "identify": 1.0,
+        "guess": 1.0
+      },
+      "classify_balanced_accuracy": 0.541,
+      "identify_accuracy": 0.05,
+      "identify_chance": 0.03,
+      "guess_consistent_rate": 0.35,
+      "median_completion_tokens": 8.0,
+      "passes_floor": true
+    }
+  },
+  "depth_model": "qwen3-32b",
+  "depth_reason": "mid-range accuracy (classification 0.67, identification 0.18): errors to model and room for the aid to help; thinking toggle for T4",
+  "panel": [
+    "gpt-oss-120b",
+    "qwen3-32b",
+    "phi-4",
+    "olmo2-32b"
+  ],
+  "panel_notes": {
+    "olmo2-32b": "passes the floor only narrowly (identification 0.05 vs chance 0.03); kept as the weak end of the capability range, flagged in analyses",
+    "mistral-small-24b": "pending: needs Mistral-format weights (consolidated.safetensors); add if its smoke test passes",
+    "claude": "Claude API models: optional additions to the panel; decision pending"
+  }
+}

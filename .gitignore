@@ -1,0 +1,29 @@
+# environment, secrets and local cluster settings
+.env
+.venv/
+experiments/hpc/site.env
+__pycache__/
+.pytest_cache/
+.DS_Store
+
+# logs and partial outputs
+*.log
+*.out
+*.aux
+*.tmp*
+
+# language-model reply cache (large; every reply is also summarized in results/)
+data/probes/
+
+# third-party material: linked, not redistributed
+data/human/*
+!data/human/README.md
+external/
+references/
+
+# local working material, not published
+docs/
+deliverables/
+prereg/
+archive/
+/*.pdf
