@@ -1,6 +1,6 @@
 {
   "frozen": "2026-11-17",
-  "note": "Templates frozen before Study C runs; any change requires a new version and rerun (spec 8).",
+  "note": "Templates frozen before the Study B runs; any change requires a new version and a rerun.",
   "rules_sha256": "93da75c2980cc6a1",
   "template_hashes": {
     "guess/T0": "d3ba67abb45a",

@@ -3,7 +3,7 @@
 One shared rules text, fixed feedback wording ("black B, white W"), and one template per
 task x condition. Every reply ends with one line of JSON; free-text reasoning before it is
 allowed in every condition. Templates are hashed into each record, and prompts never contain
-the secret, the codes still possible, EIG, V* or scores (checked by tests/test_prompts.py).
+the secret, the codes still possible, EIG, V* or scores.
 
 Tasks:  guess     next guess in a game          {"guess": "1234"}
         classify  which listed codes are still possible   {"1234": "possible", ...}

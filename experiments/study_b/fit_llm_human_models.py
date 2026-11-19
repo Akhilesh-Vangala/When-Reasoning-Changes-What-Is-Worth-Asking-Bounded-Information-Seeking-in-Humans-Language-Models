@@ -16,6 +16,12 @@ people uses ΔAIC per decision, plus fits on blocks of 10 games (the same unit a
   add --procedure converged to every call for the converged fits (primary; rules in mastermind/human_models.py),
   compared with the converged human fits; run the greedy fits of the same unit first (they are a start)
 
+Cache seed (the Study A check, `fit_human_models.py cache_seed`): the pooled bounded fit is repeated with the
+independently rebuilt cache (converged procedure; starts: the inline greedy search and the cache-1 converged fit),
+and compared with people whose bounded model was refitted with the same cache:
+  python experiments/study_b/fit_llm_human_models.py fit --model gpt-oss-120b --procedure converged --cache-rep 2
+  python experiments/study_b/fit_llm_human_models.py cache_seed --model gpt-oss-120b
+
 Invalid turns (no parseable guess after the re-asks) gave no feedback, so they are dropped from the
 game; the rest of the game is unchanged. Applies to models that pass the B1 solve-rate rule;
 floor models are reported descriptively in B1.
@@ -52,13 +58,21 @@ def llm_games(mm, model, condition, solved_only=True):
     return games, len(recs)
 
 
-def run_dir(model, condition, include_unsolved, procedure="greedy"):
-    return OUT / f"{model}_{condition}{'_with_unsolved' if include_unsolved else ''}{SUFFIX[procedure]}"
+def cache_path(rep=1):
+    return CACHE if rep == 1 else CACHE.with_name(f"{CACHE.stem}_rep{rep}.npz")
 
 
-def fit(model, condition, include_unsolved=False, block=None, boot=None, seed=0, procedure="greedy"):
+def run_dir(model, condition, include_unsolved, procedure="greedy", cache_rep=1):
+    return OUT / (f"{model}_{condition}{'_with_unsolved' if include_unsolved else ''}"
+                  + (f"_cacherep{cache_rep}" if cache_rep != 1 else "") + SUFFIX[procedure])
+
+
+def fit(model, condition, include_unsolved=False, block=None, boot=None, seed=0, procedure="greedy", cache_rep=1):
     task = hm.Task()
-    cache = hm.BoundedCache(CACHE)
+    cache = hm.BoundedCache(cache_path(cache_rep))
+    if cache_rep != 1:  # cache-seed check: pooled bounded fit only, converged procedure
+        assert block is None and boot is None and procedure == "converged" and not include_unsolved, \
+            "the cache-seed check is a pooled converged fit"
     numbered, n_played = llm_games(task.mm, model, condition, solved_only=not include_unsolved)
     games = [g for _, g in numbered]
     if block is not None:  # games numbered block*10 .. block*10+9 (solved ones, unless --include-unsolved)
@@ -72,7 +86,13 @@ def fit(model, condition, include_unsolved=False, block=None, boot=None, seed=0,
         name = "pooled"
     out = {"model": model, "condition": condition, "unit": name, "games_played": n_played, "games": len(games),
            "decisions": sum(len(g) for g in games), "fits": {}}
-    if procedure == "greedy":
+    if cache_rep != 1:
+        primary = json.loads((run_dir(model, condition, False, procedure) / "pooled.json").read_text())
+        assert primary["decisions"] == out["decisions"], "different data"
+        out["cache_rep"] = cache_rep
+        out["fits"] = hm.fit_converged_models(task, ["bounded"], games, cache, None, None,
+                                              {"bounded": [primary["fits"]["bounded"]["params"]]}, seed)
+    elif procedure == "greedy":
         for m in hm.MODELS:
             out["fits"][m] = hm.fit(task, m, games, cache=cache, seed=seed)
     else:
@@ -90,7 +110,7 @@ def fit(model, condition, include_unsolved=False, block=None, boot=None, seed=0,
     out["procedure"] = procedure
     for m in out["fits"]:
         print(name, m, round(out["fits"][m]["loglik"], 2), out["fits"][m]["params"], flush=True)
-    d = run_dir(model, condition, include_unsolved, procedure)
+    d = run_dir(model, condition, include_unsolved, procedure, cache_rep)
     d.mkdir(parents=True, exist_ok=True)
     tmp = d / f"{name}.json.tmp"
     tmp.write_text(json.dumps(out, indent=1))
@@ -136,6 +156,14 @@ def summarize(model, condition, include_unsolved=False, procedure="greedy"):
         },
         "human_comparison": {
             "people": len(people),
+            "human_games_fitted": {"min": min(f["games"] for f in people), "median": float(np.median([f["games"] for f in people])),
+                                   "max": max(f["games"] for f in people)},
+            "human_decisions": {"min": min(f["decisions"] for f in people), "median": float(np.median([f["decisions"] for f in people])),
+                                "max": max(f["decisions"] for f in people)},
+            # without the AIC penalty, which per decision is smaller for a model (hundreds of decisions) than for a person
+            "percentile_2dLL_per_decision": {k: percentile(2 * (pooled["fits"]["bounded"]["loglik"] - pooled["fits"][o]["loglik"]) / pooled["decisions"],
+                                                           [2 * (f["fits"]["bounded"]["loglik"] - f["fits"][o]["loglik"]) / f["decisions"] for f in people])
+                                             for k, o in (("vs_unbounded", "unbounded"), ("vs_leaky", "leaky"))},
             "human_dAIC_per_decision_median": {k: round(float(np.median([h[k] for h in h_pd])), 4) for k in ("vs_unbounded", "vs_leaky")},
             "percentile_dAIC_per_decision": {k: percentile(p_pd[k], [h[k] for h in h_pd]) for k in ("vs_unbounded", "vs_leaky")},
             "human_bounded_params_median": {k: round(float(np.median([f["fits"]["bounded"]["params"][k] for f in people])), 4)
@@ -152,6 +180,7 @@ def summarize(model, condition, include_unsolved=False, procedure="greedy"):
             "blocks": len(blocks),
             "best_model_counts": {m: sum(x["best"] == m for x in bd) for m in hm.MODELS},
             "favoring_bounded_over_both": sum(x["vs_unbounded"] > 0 and x["vs_leaky"] > 0 for x in bd),
+            "decisions": {"min": min(b["decisions"] for b in blocks), "max": max(b["decisions"] for b in blocks)},
             "mean_dAIC_vs_unbounded": round(float(np.mean([x["vs_unbounded"] for x in bd])), 1),
             "mean_dAIC_vs_leaky": round(float(np.mean([x["vs_leaky"] for x in bd])), 1),
             "median_bounded_params": {k: round(float(np.median([b["fits"]["bounded"]["params"][k] for b in blocks])), 4)
@@ -168,14 +197,51 @@ def summarize(model, condition, include_unsolved=False, procedure="greedy"):
             "bounded_params_ci95": {k: ci([b["fits"]["bounded"]["params"][k] for b in boots]) for k in hm.MODELS["bounded"]},
             "share_bounded_best": round(float(np.mean([d_aic(b)["best"] == "bounded" for b in boots])), 3),
         }
+    if procedure == "greedy":  # hm.fit stops after 3000 likelihood evaluations, shared by all its starts
+        units = [pooled] + blocks + boots
+        out["evaluation_cap_reached"] = {"fits": len(units), **{m: sum(u["fits"][m]["evals"] >= 3000 for u in units) for m in hm.MODELS},
+                                         "pooled": [m for m in hm.MODELS if pooled["fits"][m]["evals"] >= 3000]}
     path = ROOT / "results/study_b" / f"b1b_{model}_{condition}{'_with_unsolved' if include_unsolved else ''}{SUFFIX[procedure]}.json"
+    path.write_text(json.dumps(out, indent=2))
+    print(json.dumps(out, indent=2))
+
+
+def cache_seed(model, condition, rep=2, procedure="converged"):
+    """Pooled B1b comparison with the bounded model refitted on the independently rebuilt cache, next to people
+    whose bounded model was refitted with the same cache (Study A, `e3_fits_cacherep2_converged`); the unbounded
+    and leaky fits do not use the cache and are the same in both."""
+    one = json.loads((run_dir(model, condition, False, procedure) / "pooled.json").read_text())
+    two = json.loads((run_dir(model, condition, False, procedure, rep) / "pooled.json").read_text())
+    assert one["decisions"] == two["decisions"]
+    h1 = {json.loads(q.read_text())["participant"]: json.loads(q.read_text()) for q in sorted((HUMAN / f"e3_fits{SUFFIX[procedure]}").glob("participant_*.json"))}
+    h2 = {json.loads(q.read_text())["participant"]: json.loads(q.read_text())
+          for q in sorted((HUMAN / f"e3_fits_cacherep{rep}{SUFFIX[procedure]}").glob("participant_*.json"))}
+    ids = sorted(set(h1) & set(h2))
+
+    def per_decision(fits, n):
+        a = {m: fits[m]["aic"] for m in hm.MODELS}
+        return {"vs_unbounded": (a["unbounded"] - a["bounded"]) / n, "vs_leaky": (a["leaky"] - a["bounded"]) / n, "best": min(a, key=a.get)}
+
+    out = {"model": model, "condition": condition, "procedure": procedure, "replicate_cache": rep, "decisions": one["decisions"], "people": len(ids)}
+    for label, b in (("cache_1", one["fits"]["bounded"]), (f"cache_{rep}", two["fits"]["bounded"])):
+        fits = {**one["fits"], "bounded": b}
+        hum = [per_decision({**h1[i]["fits"], "bounded": (h1 if label == "cache_1" else h2)[i]["fits"]["bounded"]}, h1[i]["decisions"]) for i in ids]
+        hum_alpha = [(h1 if label == "cache_1" else h2)[i]["fits"]["bounded"]["params"]["alpha"] for i in ids]
+        pd_ = per_decision(fits, one["decisions"])
+        out[label] = {"best_model": pd_["best"], "bounded_loglik": round(b["loglik"], 2), "bounded_params": b["params"],
+                      "dAIC_per_decision": {k: round(pd_[k], 4) for k in ("vs_unbounded", "vs_leaky")},
+                      "people_best_bounded": sum(h["best"] == "bounded" for h in hum),
+                      "people_dAIC_per_decision_median": {k: round(float(np.median([h[k] for h in hum])), 4) for k in ("vs_unbounded", "vs_leaky")},
+                      "percentile_dAIC_per_decision": {k: percentile(pd_[k], [h[k] for h in hum]) for k in ("vs_unbounded", "vs_leaky")},
+                      "percentile_alpha": percentile(b["params"]["alpha"], hum_alpha)}
+    path = ROOT / "results/study_b" / f"b1b_{model}_{condition}_cache_seed{SUFFIX[procedure]}.json"
     path.write_text(json.dumps(out, indent=2))
     print(json.dumps(out, indent=2))
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["fit", "summarize"])
+    ap.add_argument("cmd", choices=["fit", "summarize", "cache_seed"])
     ap.add_argument("--model", required=True)
     ap.add_argument("--condition", default="T0")
     ap.add_argument("--include-unsolved", action="store_true")
@@ -183,9 +249,12 @@ def main():
     g.add_argument("--block", type=int)
     g.add_argument("--boot", type=int)
     ap.add_argument("--procedure", choices=list(SUFFIX), default="greedy")
+    ap.add_argument("--cache-rep", type=int, default=1, help="cache-seed check: the independently rebuilt cache")
     a = ap.parse_args()
     if a.cmd == "fit":
-        fit(a.model, a.condition, a.include_unsolved, a.block, a.boot, procedure=a.procedure)
+        fit(a.model, a.condition, a.include_unsolved, a.block, a.boot, procedure=a.procedure, cache_rep=a.cache_rep)
+    elif a.cmd == "cache_seed":
+        cache_seed(a.model, a.condition)
     else:
         summarize(a.model, a.condition, a.include_unsolved, a.procedure)
 

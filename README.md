@@ -2,34 +2,64 @@
 
 **Bounded Information Seeking in Humans and Language Models**
 
-## Overview
+People playing Mastermind trade informativity for interpretability: they favor queries whose feedback they can
+interpret, even when other queries are more informative (Cheyette et al., 2025). This project asks whether
+language models show the same trade-off, and whether independent measures of how they process evidence can
+predict how a reasoning aid changes which questions are worth asking. All studies use 4-position, 4-color
+Mastermind (256 codes), where ideal Bayesian inference is exact.
 
-People playing Mastermind trade informativity for interpretability: they favor queries whose feedback they can interpret, even when other queries are more informative (Cheyette et al., 2025). This project extends that work to ask whether language models show the same trade-off, and whether independent measures of how they process evidence can predict how a reasoning aid changes which questions are worth asking.
+1. **Study A, human modeling:** reproduce the published behavioral findings and the comparison of the
+   bounded-representation model with noisy-inference and ideal-observer accounts.
+2. **Study B, language models:** run language models on the positions people saw and on full games, fit the same
+   human models to their play, and compare process models of how one model uses feedback.
+3. **Study C, capacity manipulation:** give that model a structured reasoning aid and test whether the fitted models
+   predict how the aid changes the usefulness of each question.
 
-The project has three parts:
+This repository contains Studies A and B. Study C is not part of it yet.
 
-1. **Study A, human modeling:** reproduce the published behavioral findings and model comparison.
-2. **Study B, language models:** run language models on the same game positions people saw and on full games, fit the same human models to their play, and compare process models of how they use feedback.
-3. **Study C, capacity manipulation:** give a model a structured reasoning aid and test whether the fitted models predict how the aid changes the usefulness of each question.
+## Main results
+
+**Study A** (`results/study_a/README.md`)
+- The behavioral findings reproduce. Experiment 1: after Simple histories people need fewer guesses than after
+  Max-EIG histories (B = −2.31, t(283) = −5.92; paper −2.29, −5.89). Experiment 3: solve rate 0.864, 7.72 guesses
+  (paper 0.86, 7.5).
+- The bounded model fits best for 33 of 39 people (converged fits; 34 with the paper's search, paper 37) and, with
+  converged fits, predicts held-out people better than the leaky and unbounded models. Its margin over the leaky
+  model is smaller than reported (mean ΔAIC 27.8 vs. 72.3).
+
+**Study B** (`results/study_b/README.md`)
+- **B1:** people need 1.29 [0.29, 2.28] more guesses after informative but complex histories than after simple ones.
+  None of the models that solve at least half their games (gpt-oss-120b, Claude Haiku 5.5, Claude Opus 5.5) shows
+  this (−0.79 to 0.23); Haiku and Opus are faster after them, like the ideal player. Two weaker models show the
+  human direction descriptively.
+- **B1b:** the bounded model fits these models' free play best, but its advantage over the ideal observer is far
+  smaller than in people (0.16–0.36 per decision against a human median of 1.49; for Opus the margin depends on
+  the representation cache).
+- **B2/B3** (Qwen3-32B): its evidence use is noisy, mostly ruling out codes that are still possible, with more errors
+  after several clues than after one. The human account (a conservative approximation) does not transfer; a
+  symmetric approximation fits best among the planned models, but its edge over plain noise is not reliable on
+  held-out families.
+- **Native question choice:** Qwen3's choices follow the informativeness and structure of queries, not how useful
+  a query is to it.
 
 ## Repository layout
 
 ```
-mastermind/          core package: game engine, ideal observer, human models, process models,
-                     prompts, language-model client and symmetry utilities
+mastermind/          core package: game engine and ideal observer, human models, process models,
+                     usefulness, prompts, language-model client, symmetry utilities
 experiments/
   study_a/           human reproduction, representation cache, model fits, recovery
-  study_b/           LLM game play (B1), human models fitted to LLM play (B1b),
-                     probe battery (B2), process-model comparison (B3)
-  hpc/               SLURM job scripts (see experiments/hpc/README.md)
-configs/             model registry (versions, decoding settings) and frozen prompt templates
+  study_b/           model screening, game play (B1), human models fitted to model play (B1b),
+                     probe battery (B2), process-model comparison (B3), native question choice
+  hpc/               SLURM job scripts and the list of cluster runs
+  reproduce_summaries.sh   regenerates every reported number from the saved records and fits
+configs/             model registry, model selection and frozen prompt templates
 data/
   stimuli/           the Experiment 1 starting positions, derived from the human data
-  splits/            state families and fixed development / calibration / confirmation splits
-  model_cache/       rebuilt representation cache for the bounded model
+  splits/            state families and their fixed splits
+  model_cache/       rebuilt representation caches for the bounded model
   human/             where to put the human data (not redistributed; see its README)
-results/             outputs of every script, one folder per study
-tests/               unit tests (pytest)
+results/             outputs of every script and the write-up of each study
 ```
 
 ## Setup
@@ -37,27 +67,26 @@ tests/               unit tests (pytest)
 ```
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env          # API keys, only needed for hosted models; .env is git-ignored
-pytest                        # unit tests
+cp .env.example .env          # API key, only needed for the Claude models; .env is git-ignored
 ```
 
-Download the human data as described in `data/human/README.md`. Open-weight models are served with vLLM on a GPU cluster (`experiments/hpc/`); everything else runs on a laptop.
+Download the human data as described in `data/human/README.md`. Open-weight models are served with vLLM on a GPU
+cluster (`experiments/hpc/`); everything else runs on a laptop.
 
-## Reproducing Study A
+## Reproducing the results
 
 ```
-python experiments/study_a/e1_reproduction.py
-python experiments/study_a/e2_descriptive.py
-python experiments/study_a/e3_reproduction.py
-python experiments/study_a/fit_human_models.py fit --participant 0      # repeat for 0-38, or use the array job
-python experiments/study_a/fit_human_models.py summarize
+bash experiments/reproduce_summaries.sh     # every summary, from the saved records and fits; no model calls or refits
 ```
 
-Results and the comparison with the published values are in `results/study_a/README.md`.
+The model fits run on a cluster; `experiments/hpc/README.md` lists every job. The human models are fitted in two
+ways, both reported: the paper's greedy search (the reproduction) and converged fits (the primary results; rules
+in `mastermind/human_models.py`). For one participant:
 
-## Status
-
-This repository contains Studies A and B. Study A is complete; Study B is in progress.
+```
+python experiments/study_a/fit_human_models.py fit --participant 0                          # paper's procedure
+python experiments/study_a/fit_human_models.py fit --participant 0 --procedure converged    # converged fits
+```
 
 ## References
 

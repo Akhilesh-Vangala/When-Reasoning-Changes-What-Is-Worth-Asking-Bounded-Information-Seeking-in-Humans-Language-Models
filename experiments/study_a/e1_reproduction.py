@@ -61,6 +61,17 @@ def controlled_effect(df):
         lo, hi = fit.conf_int().loc[k]
         out[name] = {"max_eig_minus_simple": round(float(fit.params[k]), 2), "ci95": [round(float(lo), 2), round(float(hi), 2)],
                      "p": round(float(fit.pvalues[k]), 4)}
+    # The paper's own regression (Results, Experiment 1): guesses after the supplied history, as made (unsolved games
+    # not imputed), on condition and initial entropy (natural log of the codes remaining), ordinary least squares,
+    # all Simple and Max-EIG games.
+    d["entropy_nats"] = d.log2_remaining * np.log(2)
+    fit = smf.ols("n_human ~ C(condition, Treatment('Max-EIG')) + entropy_nats", data=d).fit()
+    k = "C(condition, Treatment('Max-EIG'))[T.Simple]"
+    out["paper_specification"] = {
+        "games": int(len(d)), "df_resid": int(fit.df_resid),
+        "simple_minus_max_eig": {"B": round(float(fit.params[k]), 2), "t": round(float(fit.tvalues[k]), 2)},
+        "initial_entropy_nats": {"B": round(float(fit.params["entropy_nats"]), 2), "t": round(float(fit.tvalues["entropy_nats"]), 2)},
+        "paper": {"simple_minus_max_eig": {"B": -2.29, "t": -5.89, "df": 283}, "initial_entropy": {"B": 0.62, "t": 4.94, "df": 283}}}
     return out
 
 

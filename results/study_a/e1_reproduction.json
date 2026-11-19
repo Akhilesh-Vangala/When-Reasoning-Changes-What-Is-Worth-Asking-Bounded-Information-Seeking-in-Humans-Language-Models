@@ -36,6 +36,30 @@
         3.53
       ],
       "p": 0.0
+    },
+    "paper_specification": {
+      "games": 286,
+      "df_resid": 283,
+      "simple_minus_max_eig": {
+        "B": -2.31,
+        "t": -5.92
+      },
+      "initial_entropy_nats": {
+        "B": 0.62,
+        "t": 4.96
+      },
+      "paper": {
+        "simple_minus_max_eig": {
+          "B": -2.29,
+          "t": -5.89,
+          "df": 283
+        },
+        "initial_entropy": {
+          "B": 0.62,
+          "t": 4.94,
+          "df": 283
+        }
+      }
     }
   },
   "games": 393,

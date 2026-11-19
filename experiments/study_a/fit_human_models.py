@@ -110,6 +110,8 @@ def summarize(include_unsolved=False, procedure="greedy"):
         "median_params": {m: {k: round(float(np.median([f["fits"][m]["params"][k] for f in fits])), 4)
                               for k in hm.MODELS[m]} for m in hm.MODELS},
     }
+    if procedure == "greedy":  # the search stops after hm.fit's max_evals likelihood evaluations, shared by all starts
+        summary["evaluation_cap_reached"] = {m: sum(f["fits"][m]["evals"] >= 3000 for f in fits) for m in hm.MODELS}
     if procedure != "greedy":
         summary["parameters_at_a_limit"] = {m: {k: sum(k in f["fits"][m]["at_limit"] for f in fits) for k in hm.MODELS[m]}
                                             for m in hm.MODELS}

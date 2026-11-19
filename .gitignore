@@ -3,7 +3,6 @@
 .venv/
 experiments/hpc/site.env
 __pycache__/
-.pytest_cache/
 .DS_Store
 
 # logs and partial outputs
@@ -34,10 +33,12 @@ data/model_cache/search*/
 # Study C (capacity manipulation) and its aid-condition data: kept locally, handled separately
 experiments/study_c/
 results/study_c/
-mastermind/usefulness.py
-tests/test_usefulness.py
 results/study_b/battery/*_T[1-4]_*
 results/study_b/process_fits/*T[1-4]*
+results/study_b/usefulness_choice/*
+!results/study_b/usefulness_choice/*_T0_choice_calibration*
 
 # partial files from split B1 runs (the assembled file is the result)
 results/study_b/b1/shards/
+# format pilots before the B1 runs (not used in any result)
+results/study_b/b1/pilots/

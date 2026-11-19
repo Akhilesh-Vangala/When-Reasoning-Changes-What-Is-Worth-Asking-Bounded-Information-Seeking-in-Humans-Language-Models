@@ -207,7 +207,7 @@ def _default_starts(model):
 
 
 # ---- fitting, converged version ----------------------------------------------
-# The greedy search above often stops before the maximum (Nov 18, 2026: 9 of 39 leaky fits had a lower
+# The greedy search above often stops before the maximum (9 of 39 leaky fits had a lower
 # log-likelihood than the unbounded fit nested in them). The converged fits are the primary Study A and
 # B1b results; the greedy-search fits are kept as the reproduction of the paper's procedure.
 # Rules, fixed before any converged fit was run:

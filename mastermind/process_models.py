@@ -13,6 +13,8 @@ Decision temperature is fixed at 1 (not identifiable from final codes under a un
   M2s  symmetric approximation              l = (1 - nu) pi_s(alpha) + nu / 2       params: alpha, nu, zeta
   M3   evidence retention                   clue i kept with r_i = sigmoid(k0 + k1 * age_i),
                                             age 0 = newest; exact over the 2^k kept subsets   params: k0, k1, zeta
+                                            One subset per reply: every code judged in one reply uses the same kept
+                                            clues, as in `simulate`.
 
 Exploratory (added after the planned comparison, motivated by the error profile; not part of it):
   M1a  two-rate noisy evidence use          l = (1 - nu_x) c + nu_r (1 - c)                    params: nu_x, nu_r, zeta
@@ -58,21 +60,61 @@ def clue_weights(model, p, item, caches):
     return (1 - p["nu"]) * pi + p["nu"] / 2
 
 
+def _subsets(k):
+    """Every kept/forgotten pattern of k clues, [2^k, k] booleans, in itertools.product order."""
+    return np.array(list(product([0, 1], repeat=k)), bool)
+
+
+def _m3_table(item):
+    """Per kept-clue subset S of one reply: classify -> number of answers that agree with exact inference from
+    the clues in S (g_S(x) = 1 said possible, g_S(x) = 0 said ruled out), and the number of answers;
+    identify -> b_S(d), the probability of the named code under uniform belief over the codes S allows.
+    Cached on the item (the answers never change)."""
+    t = getattr(item, "_m3", None)
+    if t is None:
+        S = _subsets(len(item.clues))
+        if item.task == "classify":
+            xs = np.array([x for x, _ in item.answer])
+            said = np.array([s for _, s in item.answer], bool)
+            g = np.array([np.prod(item.c[kept][:, xs], axis=0) if kept.any() else np.ones(len(xs)) for kept in S]) > 0.5
+            t = ((g == said[None, :]).sum(1).astype(float), float(len(xs)))
+        else:
+            gs = [np.prod(item.c[kept], axis=0) if kept.any() else np.ones(item.c.shape[1]) for kept in S]
+            t = (np.array([g[item.answer] / g.sum() for g in gs]),)
+        item._m3 = t
+    return t
+
+
+def m3_loglik(p, items):
+    """M3 log likelihood, exact: one kept-clue subset per reply (the same subset for every code judged in it,
+    as in `simulate`), marginalized over the 2^k subsets. A reply's answers are independent given the subset."""
+    zeta = p["zeta"]
+    groups = {}
+    for it in items:
+        groups.setdefault((it.task, len(it.clues)), []).append(it)
+    total = 0.0
+    with np.errstate(divide="ignore"):
+        for (task, k), its in groups.items():
+            S = _subsets(k)
+            r = expit(p["k0"] + p["k1"] * np.arange(k)[::-1])  # newest clue has age 0
+            logw = np.where(S, np.log(r), np.log1p(-r)).sum(1)  # [2^k]
+            if task == "classify":
+                agree = np.array([_m3_table(it)[0] for it in its])  # [n, 2^k]
+                n = np.array([_m3_table(it)[1] for it in its])[:, None]
+                ll = logw[None, :] + agree * np.log1p(-zeta / 2) + (n - agree) * np.log(zeta / 2)
+                m = ll.max(1, keepdims=True)
+                total += float((m[:, 0] + np.log(np.exp(ll - m).sum(1))).sum())
+            else:
+                bS = np.array([_m3_table(it)[0] for it in its])  # [n, 2^k]
+                b = bS @ np.exp(logw)
+                total += float(np.log((1 - zeta) * b + zeta / its[0].c.shape[1]).sum())
+    return total
+
+
 def item_loglik(model, p, item, caches):
     zeta = p["zeta"]
     if model == "M3":
-        k = len(item.clues)
-        ages = np.arange(k)[::-1]  # newest clue has age 0
-        r = expit(p["k0"] + p["k1"] * ages)
-        if item.task == "classify":
-            g = np.prod(r[:, None] * item.c + (1 - r[:, None]), axis=0)   # independence gives the closed form
-        else:
-            b = np.zeros(item.c.shape[1])
-            for kept in product([0, 1], repeat=k):
-                kept = np.array(kept, bool)
-                w = np.prod(np.where(kept, r, 1 - r))
-                g_s = np.prod(item.c[kept], axis=0) if kept.any() else np.ones(item.c.shape[1])
-                b += w * g_s / g_s.sum()
+        return m3_loglik(p, [item])
     else:
         l_ = clue_weights(model, p, item, caches)
         g = np.prod(l_, axis=0)
@@ -88,6 +130,8 @@ def item_loglik(model, p, item, caches):
 
 
 def loglik(model, p, items, caches=None):
+    if model == "M3":
+        return m3_loglik(p, items)
     return sum(item_loglik(model, p, it, caches) for it in items)
 
 

@@ -102,7 +102,7 @@ def run(args, mode):
             jobs.append((int(s), [], f"free:{g}"))
     if args.limit:
         jobs = jobs[::max(1, len(jobs) // args.limit)][:args.limit]
-    out_dir = OUT
+    out_dir = OUT / "pilots" if args.limit else OUT  # pilots (cost and format checks) are kept apart from results
     name = f"{args.model}_{mode}_{args.condition}{'_pilot' if args.limit else ''}"
     if args.shards > 1:  # every n-th game, so each part gets a similar mix of starting positions
         jobs = jobs[args.shard::args.shards]

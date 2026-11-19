@@ -1,4 +1,5 @@
 {
+  "procedure": "greedy",
   "method": "leave-one-participant-out; per-parameter median of the other 38 participants' fits; solved games",
   "heldout_loglik_total": {
     "unbounded": -13406.5,

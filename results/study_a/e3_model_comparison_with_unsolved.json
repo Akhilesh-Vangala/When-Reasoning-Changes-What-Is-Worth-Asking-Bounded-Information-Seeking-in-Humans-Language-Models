@@ -30,5 +30,10 @@
       "lam": 9.4566,
       "tau": 0.1082
     }
+  },
+  "evaluation_cap_reached": {
+    "unbounded": 0,
+    "leaky": 0,
+    "bounded": 4
   }
 }

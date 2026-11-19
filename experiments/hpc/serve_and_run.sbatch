@@ -1,6 +1,6 @@
 #!/bin/bash
 # Serve one registry model with vLLM, then run an experiment script against it.
-#   sbatch experiments/hpc/serve_and_run.sbatch qwen3-32b experiments/study_b/smoke_test.py --model qwen3-32b
+#   sbatch experiments/hpc/serve_and_run.sbatch qwen3-32b experiments/study_b/screen_models.py --model qwen3-32b
 #   sbatch --gres=gpu:l40s:2 experiments/hpc/serve_and_run.sbatch ...   (when the H200 queue is long)
 # The model's Hugging Face id and vLLM arguments come from configs/model_registry.json; the model is split
 # across all GPUs the job receives (tensor parallelism; weights and precision unchanged).
