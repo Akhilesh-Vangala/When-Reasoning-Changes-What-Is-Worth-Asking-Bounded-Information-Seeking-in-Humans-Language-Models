@@ -1,4 +1,5 @@
 {
+  "procedure": "greedy",
   "participants": 39,
   "mean_dAIC_bounded_vs_unbounded": 104.6,
   "mean_dAIC_bounded_vs_leaky": 83.5,

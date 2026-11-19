@@ -16,12 +16,11 @@ The project has three parts:
 
 ```
 mastermind/          core package: game engine, ideal observer, human models, process models,
-                     prompts, language-model client, symmetry and usefulness utilities
+                     prompts, language-model client and symmetry utilities
 experiments/
   study_a/           human reproduction, representation cache, model fits, recovery
   study_b/           LLM game play (B1), human models fitted to LLM play (B1b),
                      probe battery (B2), process-model comparison (B3)
-  study_c/           usefulness and choice runs, prospective prediction test
   hpc/               SLURM job scripts (see experiments/hpc/README.md)
 configs/             model registry (versions, decoding settings) and frozen prompt templates
 data/
@@ -58,7 +57,7 @@ Results and the comparison with the published values are in `results/study_a/REA
 
 ## Status
 
-Work in progress. Study A is complete; Studies B and C are running.
+This repository contains Studies A and B. Study A is complete; Study B is in progress.
 
 ## References
 

@@ -43,24 +43,18 @@ def test_noise_recovery_m1():
     assert abs(f["params"]["nu"] - 0.3) < 0.15
 
 
-def test_predicted_usefulness_exact_model_equals_vstar():
-    from mastermind import usefulness as us
-    f = fams[0]
-    h = [(mm.index(g), (b, w)) for g, b, w in f["history"]]
-    mask = mm.consistent(h)
-    q = int(np.flatnonzero(~mask)[0])
-    u = us.predicted_usefulness(mm, "M0", {"zeta": 0.0}, h, q, None)
-    vstar = len(set(mm.table[q, mask].tolist())) / mask.sum()
-    assert np.isclose(u, vstar)
+def test_m1a_with_equal_rates_equals_m1():
+    items = _items(lambda xs, mask: [(int(x), bool(mask[x])) for x in xs])
+    p1 = {"nu": 0.3, "zeta": 0.1}
+    p1a = {"nu_x": 0.15, "nu_r": 0.15, "zeta": 0.1}
+    assert np.isclose(pm.loglik("M1", p1, items), pm.loglik("M1a", p1a, items), atol=1e-9)
 
 
-def test_full_support_recovers_exact_usefulness():
-    from mastermind import usefulness as us
-    f = fams[1]
-    h = [(mm.index(g), (b, w)) for g, b, w in f["history"]]
-    mask = mm.consistent(h)
-    q = int(np.flatnonzero(~mask)[3])
-    u_noisy = us.predicted_usefulness(mm, "M1", {"nu": 0.4, "zeta": 0.0}, h, q, None)
-    u_full = us.predicted_usefulness(mm, "M1", {"nu": 0.4, "zeta": 0.0}, h, q, None, delta=1.0)
-    u_exact = us.predicted_usefulness(mm, "M0", {"zeta": 0.0}, h, q, None)
-    assert u_noisy < u_full and np.isclose(u_full, u_exact)
+def test_m1a_recovers_one_sided_noise():
+    """Over-exclusion (nu_x > nu_r) is recovered as such, and M1a then beats M1."""
+    rng = np.random.default_rng(1)
+    items = _items(lambda xs, mask: [(int(x), bool(mask[x])) for x in xs]) * 8
+    sim = pm.simulate("M1a", {"nu_x": 0.3, "nu_r": 0.03, "zeta": 0.05}, items, None, rng)
+    fa, f1 = pm.fit("M1a", sim), pm.fit("M1", sim)
+    assert fa["params"]["nu_x"] > fa["params"]["nu_r"] + 0.1
+    assert fa["aic"] < f1["aic"]

@@ -10,7 +10,7 @@ Before submitting, set the allocation (and, if your layout differs from the defa
 | `SBATCH_ACCOUNT` | SLURM allocation to charge (read by `sbatch` itself) | none: required |
 | `CCM_ROOT` | repository path on the cluster | the submit directory |
 | `CCM_ENV` | Python environment with the requirements and vLLM | `$CCM_ROOT/env` |
-| `HF_HOME` | Hugging Face cache holding the model weights | `hf_cache/` next to the repository |
+| `CCM_HF_HOME` | Hugging Face cache holding the model weights (jobs set `HF_HOME` from it, so an `HF_HOME` already in your login environment cannot redirect them) | `hf_cache/` next to the repository |
 
 Put the exports in `experiments/hpc/site.env` (git-ignored; copy `site.env.example`) and
 `source experiments/hpc/site.env` before `sbatch`. `chain.sh` sources it automatically.

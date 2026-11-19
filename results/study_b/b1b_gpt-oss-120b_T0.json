@@ -2,6 +2,8 @@
   "model": "gpt-oss-120b",
   "condition": "T0",
   "include_unsolved": false,
+  "procedure": "greedy",
+  "human_fits": "e3_fits",
   "games_played": 100,
   "games_fitted": 98,
   "decisions": 455,
@@ -75,6 +77,6 @@
       "lam": 7.1585,
       "tau": 0.3794
     },
-    "human_reference": "Study A: 34 of 39 people favor bounded (solved games); mean dAIC 104.6 / 83.5"
+    "human_reference": "Study A per-person fits in results/study_a/e3_fits"
   }
 }

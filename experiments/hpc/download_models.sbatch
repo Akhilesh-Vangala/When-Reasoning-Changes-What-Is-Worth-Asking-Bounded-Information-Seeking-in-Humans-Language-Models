@@ -10,7 +10,7 @@
 set -euo pipefail
 cd "${CCM_ROOT:-$SLURM_SUBMIT_DIR}"
 CCM_ENV=${CCM_ENV:-$PWD/env}  # Python environment on the cluster
-export HF_HOME="${HF_HOME:-$(dirname "$PWD")/hf_cache}"
+export HF_HOME="${CCM_HF_HOME:-$(dirname "$PWD")/hf_cache}"  # project setting; an HF_HOME from the login environment is ignored
 export HF_HUB_ENABLE_HF_TRANSFER=0
 for MODEL in "$@"; do
     echo "== $MODEL $(date)"

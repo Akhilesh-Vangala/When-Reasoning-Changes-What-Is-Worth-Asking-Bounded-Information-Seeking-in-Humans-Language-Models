@@ -19,6 +19,8 @@ starting points, and the proposal correction (exponent alpha - 1 on the prior ra
 
   python experiments/study_a/build_cache.py search --case 0     # one case, 4 chains (parallel)
   python experiments/study_a/build_cache.py aggregate           # all cases -> data/model_cache/
+  add --rep 2 to both for an independent replicate (new seeds, separate search folder and cache file),
+  used to check that the fits do not depend on one run of the random search
 """
 import argparse
 import hashlib
@@ -46,6 +48,17 @@ PATTERNS = ["1111", "1112", "1122", "1123", "1234"]
 ALPHA_GRID = [round(10 ** e, 6) for e in np.arange(-4, 2.0001, 0.25)]
 CHAIN_ALPHAS = [0.001, 0.1, 1.0, 10.0]
 TOP_K = 10
+REP_SEED_OFFSET = 100_000  # replicate r uses seeds 1000 * case + chain + (r - 1) * REP_SEED_OFFSET
+
+
+def search_dir(variant, rep=1):
+    base = SEARCH if variant == "conservative" else SEARCH_SYM
+    return base if rep == 1 else base.with_name(f"{base.name}_rep{rep}")
+
+
+def cache_name(variant, rep=1):
+    name = "bounded_cache_v1" if variant == "conservative" else "symmetric_cache_v1"
+    return name if rep == 1 else f"{name}_rep{rep}"
 
 
 def cases(mm):
@@ -127,15 +140,16 @@ def run_chain(args):
             "exact": (exact.log_probability, 0, exact.size, str(exact))}
 
 
-def search(case_idx, iters, workers, variant):
+def search(case_idx, iters, workers, variant, rep=1):
     mm = get_game(4, 4)
     pattern, (black, white) = cases(mm)[case_idx]
     starts = ["exact", "exact", "prior", "prior"]
-    jobs = [(pattern, black, white, a, s, 1000 * case_idx + k, iters, variant) for k, (a, s) in enumerate(zip(CHAIN_ALPHAS, starts))]
+    seed0 = 1000 * case_idx + (rep - 1) * REP_SEED_OFFSET
+    jobs = [(pattern, black, white, a, s, seed0 + k, iters, variant) for k, (a, s) in enumerate(zip(CHAIN_ALPHAS, starts))]
     t0 = time.time()
     with Pool(workers) as pool:
         chains = pool.map(run_chain, jobs)
-    folder = SEARCH if variant == "conservative" else SEARCH_SYM
+    folder = search_dir(variant, rep)
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"case_{case_idx:02d}.pkl"
     with open(path, "wb") as f:
@@ -163,10 +177,10 @@ def symmetry_maps(mm):
     return maps
 
 
-def aggregate(variant="conservative"):
+def aggregate(variant="conservative", rep=1):
     mm = get_game(4, 4)
-    folder = SEARCH if variant == "conservative" else SEARCH_SYM
-    name = "bounded_cache_v1" if variant == "conservative" else "symmetric_cache_v1"
+    folder = search_dir(variant, rep)
+    name = cache_name(variant, rep)
     all_cases = cases(mm)
     per_case = []
     for i, (pattern, fb) in enumerate(all_cases):
@@ -220,7 +234,7 @@ def aggregate(variant="conservative"):
         "procedure": "Manuscript Methods: 4 MH chains per (query, feedback) case with tree-regeneration proposals; top 10 per alpha on a log grid 1e-4..100 plus the exact expression",
         "cases": len(per_case), "filters_total": int(sum(len(c["filters"]) for c in per_case)),
         "iterations_per_chain": first["iters"], "chain_alphas": CHAIN_ALPHAS, "chain_starts": ["exact", "exact", "prior", "prior"],
-        "alpha_grid": ALPHA_GRID, "top_k": TOP_K, "seeds": "1000 * case + chain",
+        "alpha_grid": ALPHA_GRID, "top_k": TOP_K, "seeds": f"1000 * case + chain + {(rep - 1) * REP_SEED_OFFSET}", "replicate": rep,
         "authors_code_sha256": src_hash,
         "our_choices": "chain alphas, starting points, proposal correction (prior ratio exponent alpha - 1) and a size cap of max(1.5 x exact size, 50) nodes are not specified in the paper",
     }
@@ -236,13 +250,15 @@ def main():
     s.add_argument("--iters", type=int, default=100_000)
     s.add_argument("--workers", type=int, default=4)
     s.add_argument("--variant", choices=["conservative", "symmetric"], default="conservative")
+    s.add_argument("--rep", type=int, default=1)
     g = sub.add_parser("aggregate")
     g.add_argument("--variant", choices=["conservative", "symmetric"], default="conservative")
+    g.add_argument("--rep", type=int, default=1)
     args = ap.parse_args()
     if args.cmd == "search":
-        search(args.case, args.iters, args.workers, args.variant)
+        search(args.case, args.iters, args.workers, args.variant, args.rep)
     else:
-        aggregate(args.variant)
+        aggregate(args.variant, args.rep)
 
 
 if __name__ == "__main__":

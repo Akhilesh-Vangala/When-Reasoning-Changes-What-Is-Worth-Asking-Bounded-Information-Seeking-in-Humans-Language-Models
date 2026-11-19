@@ -18,7 +18,8 @@ cd "${CCM_ROOT:-$SLURM_SUBMIT_DIR}"
 CCM_ENV=${CCM_ENV:-$PWD/env}  # Python environment on the cluster
 PY="$CCM_ENV/bin/python"
 export PATH="$CCM_ENV/bin:$PATH"  # vLLM JIT-compiles kernels and needs ninja from the env
-export HF_HOME="${HF_HOME:-$(dirname "$PWD")/hf_cache}" HF_HUB_OFFLINE=1
+# Weights location is a project setting (CCM_HF_HOME); an HF_HOME from the login environment is ignored.
+export HF_HOME="${CCM_HF_HOME:-$(dirname "$PWD")/hf_cache}" HF_HUB_OFFLINE=1
 read -r HF_ID VLLM_ARGS < <($PY -c "
 import json; r=json.load(open('configs/model_registry.json'))['$KEY']
 print(r['hf_id'], r['vllm_args'].replace(' ', '|'))")

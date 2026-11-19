@@ -13,6 +13,8 @@ people uses ΔAIC per decision, plus fits on blocks of 10 games (the same unit a
   python experiments/study_b/fit_llm_human_models.py fit --model gpt-oss-120b --boot 17       # bootstrap resample 17
   python experiments/study_b/fit_llm_human_models.py summarize --model gpt-oss-120b
   add --include-unsolved to every call for the sensitivity fit on all games (as in Study A)
+  add --procedure converged to every call for the converged fits (primary; rules in mastermind/human_models.py),
+  compared with the converged human fits; run the greedy fits of the same unit first (they are a start)
 
 Invalid turns (no parseable guess after the re-asks) gave no feedback, so they are dropped from the
 game; the rest of the game is unchanged. Applies to models that pass the B1 solve-rate rule;
@@ -34,6 +36,7 @@ CACHE = ROOT / "data/model_cache/bounded_cache_v1.npz"
 HUMAN = ROOT / "results/study_a"
 OUT = ROOT / "results/study_b/b1b"
 BLOCK = 10  # games per block, as one human participant
+SUFFIX = {"greedy": "", "converged": "_converged"}
 
 
 def llm_games(mm, model, condition, solved_only=True):
@@ -49,11 +52,11 @@ def llm_games(mm, model, condition, solved_only=True):
     return games, len(recs)
 
 
-def run_dir(model, condition, include_unsolved):
-    return OUT / f"{model}_{condition}{'_with_unsolved' if include_unsolved else ''}"
+def run_dir(model, condition, include_unsolved, procedure="greedy"):
+    return OUT / f"{model}_{condition}{'_with_unsolved' if include_unsolved else ''}{SUFFIX[procedure]}"
 
 
-def fit(model, condition, include_unsolved=False, block=None, boot=None, seed=0):
+def fit(model, condition, include_unsolved=False, block=None, boot=None, seed=0, procedure="greedy"):
     task = hm.Task()
     cache = hm.BoundedCache(CACHE)
     numbered, n_played = llm_games(task.mm, model, condition, solved_only=not include_unsolved)
@@ -69,10 +72,25 @@ def fit(model, condition, include_unsolved=False, block=None, boot=None, seed=0)
         name = "pooled"
     out = {"model": model, "condition": condition, "unit": name, "games_played": n_played, "games": len(games),
            "decisions": sum(len(g) for g in games), "fits": {}}
-    for m in hm.MODELS:
-        out["fits"][m] = hm.fit(task, m, games, cache=cache, seed=seed)
-        print(name, m, round(out["fits"][m]["loglik"], 1), out["fits"][m]["params"], flush=True)
-    d = run_dir(model, condition, include_unsolved)
+    if procedure == "greedy":
+        for m in hm.MODELS:
+            out["fits"][m] = hm.fit(task, m, games, cache=cache, seed=seed)
+    else:
+        greedy = run_dir(model, condition, include_unsolved) / f"{name}.json"
+        paper = {}
+        if greedy.exists():
+            g = json.loads(greedy.read_text())
+            assert g["games"] == len(games) and g["decisions"] == out["decisions"], "greedy fit is for different data"
+            paper = g["fits"]
+        extra = {}  # blocks and resamples also start from the pooled converged fit
+        primary = run_dir(model, condition, include_unsolved, procedure) / "pooled.json"
+        if name != "pooled" and primary.exists():
+            extra = {m: [f["params"]] for m, f in json.loads(primary.read_text())["fits"].items()}
+        out["fits"] = hm.fit_converged_models(task, list(hm.MODELS), games, cache, paper, None, extra, seed)
+    out["procedure"] = procedure
+    for m in out["fits"]:
+        print(name, m, round(out["fits"][m]["loglik"], 2), out["fits"][m]["params"], flush=True)
+    d = run_dir(model, condition, include_unsolved, procedure)
     d.mkdir(parents=True, exist_ok=True)
     tmp = d / f"{name}.json.tmp"
     tmp.write_text(json.dumps(out, indent=1))
@@ -91,10 +109,10 @@ def percentile(x, dist):
     return round(float(((dist < x).sum() + 0.5 * (dist == x).sum()) / len(dist)), 3)
 
 
-def summarize(model, condition, include_unsolved=False):
-    d = run_dir(model, condition, include_unsolved)
+def summarize(model, condition, include_unsolved=False, procedure="greedy"):
+    d = run_dir(model, condition, include_unsolved, procedure)
     pooled = json.loads((d / "pooled.json").read_text())
-    human_dir = HUMAN / ("e3_fits_with_unsolved" if include_unsolved else "e3_fits")
+    human_dir = HUMAN / f"e3_fits{'_with_unsolved' if include_unsolved else ''}{SUFFIX[procedure]}"
     people = [json.loads(p.read_text()) for p in sorted(human_dir.glob("participant_*.json"))]
 
     def per_decision(f):
@@ -105,7 +123,8 @@ def summarize(model, condition, include_unsolved=False):
     p = d_aic(pooled)
     p_pd = per_decision(pooled)
     out = {
-        "model": model, "condition": condition, "include_unsolved": include_unsolved,
+        "model": model, "condition": condition, "include_unsolved": include_unsolved, "procedure": procedure,
+        "human_fits": human_dir.name,
         "games_played": pooled["games_played"], "games_fitted": pooled["games"], "decisions": pooled["decisions"],
         "pooled": {
             "aic": {m: round(pooled["fits"][m]["aic"], 1) for m in hm.MODELS},
@@ -137,7 +156,7 @@ def summarize(model, condition, include_unsolved=False):
             "mean_dAIC_vs_leaky": round(float(np.mean([x["vs_leaky"] for x in bd])), 1),
             "median_bounded_params": {k: round(float(np.median([b["fits"]["bounded"]["params"][k] for b in blocks])), 4)
                                       for k in hm.MODELS["bounded"]},
-            "human_reference": "Study A: 34 of 39 people favor bounded (solved games); mean dAIC 104.6 / 83.5",
+            "human_reference": f"Study A per-person fits in results/study_a/{human_dir.name}",
         }
     boots = [json.loads(q.read_text()) for q in sorted(d.glob("boot_*.json"))]
     if boots:
@@ -149,7 +168,7 @@ def summarize(model, condition, include_unsolved=False):
             "bounded_params_ci95": {k: ci([b["fits"]["bounded"]["params"][k] for b in boots]) for k in hm.MODELS["bounded"]},
             "share_bounded_best": round(float(np.mean([d_aic(b)["best"] == "bounded" for b in boots])), 3),
         }
-    path = ROOT / "results/study_b" / f"b1b_{model}_{condition}{'_with_unsolved' if include_unsolved else ''}.json"
+    path = ROOT / "results/study_b" / f"b1b_{model}_{condition}{'_with_unsolved' if include_unsolved else ''}{SUFFIX[procedure]}.json"
     path.write_text(json.dumps(out, indent=2))
     print(json.dumps(out, indent=2))
 
@@ -163,11 +182,12 @@ def main():
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--block", type=int)
     g.add_argument("--boot", type=int)
+    ap.add_argument("--procedure", choices=list(SUFFIX), default="greedy")
     a = ap.parse_args()
     if a.cmd == "fit":
-        fit(a.model, a.condition, a.include_unsolved, a.block, a.boot)
+        fit(a.model, a.condition, a.include_unsolved, a.block, a.boot, procedure=a.procedure)
     else:
-        summarize(a.model, a.condition, a.include_unsolved)
+        summarize(a.model, a.condition, a.include_unsolved, a.procedure)
 
 
 if __name__ == "__main__":

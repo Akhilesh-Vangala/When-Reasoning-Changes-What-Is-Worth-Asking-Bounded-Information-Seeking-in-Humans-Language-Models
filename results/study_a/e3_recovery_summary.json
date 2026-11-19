@@ -1,4 +1,5 @@
 {
+  "procedure": "greedy",
   "participants": 39,
   "confusion_rows_generating_cols_best": {
     "unbounded": {

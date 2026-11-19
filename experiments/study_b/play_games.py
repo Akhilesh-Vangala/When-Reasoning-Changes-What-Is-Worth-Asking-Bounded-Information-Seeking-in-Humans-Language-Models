@@ -10,6 +10,8 @@ that the turn counts as an invalid guess with no feedback. Every guess is scored
 
 Run inside a job where the model is served:
   python experiments/study_b/play_games.py --model qwen3-32b --mode e1 --completions 10
+Long runs can be split across jobs: `--shard i --shards n` plays every n-th game (a partial file under
+b1/shards/); a final run without --shard then reads every reply from the cache and writes the single file.
 """
 import argparse
 import json
@@ -75,7 +77,11 @@ def main():
     ap.add_argument("--workers", type=int, default=64)
     ap.add_argument("--limit", type=int, default=0,
                     help="pilot: play an evenly spaced subset of N games (same game ids, so a later full run reuses them)")
+    ap.add_argument("--shard", type=int, default=0, help="this job's part (0-based) when the games are split")
+    ap.add_argument("--shards", type=int, default=1, help="number of jobs the games are split across")
     args = ap.parse_args()
+    if not 0 <= args.shard < args.shards:
+        ap.error("--shard must be between 0 and --shards - 1")
 
     for mode in (["e1", "free"] if args.mode == "both" else [args.mode]):
         run(args, mode)
@@ -96,9 +102,14 @@ def run(args, mode):
             jobs.append((int(s), [], f"free:{g}"))
     if args.limit:
         jobs = jobs[::max(1, len(jobs) // args.limit)][:args.limit]
+    out_dir = OUT
+    name = f"{args.model}_{mode}_{args.condition}{'_pilot' if args.limit else ''}"
+    if args.shards > 1:  # every n-th game, so each part gets a similar mix of starting positions
+        jobs = jobs[args.shard::args.shards]
+        out_dir, name = OUT / "shards", f"{name}_shard{args.shard}of{args.shards}"
 
-    OUT.mkdir(parents=True, exist_ok=True)
-    path = OUT / f"{args.model}_{mode}_{args.condition}{'_pilot' if args.limit else ''}.jsonl"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    path = out_dir / f"{name}.jsonl"
     tmp = path.with_suffix(f".tmp{os.getpid()}")  # one writer per file; the finished file replaces the old one
     with ThreadPoolExecutor(args.workers) as ex, open(tmp, "w") as f:
         for n, rec in enumerate(ex.map(lambda j: play(client, mm, j[0], j[1], args.condition, j[2]), jobs), 1):

@@ -204,3 +204,120 @@ def _default_starts(model):
     if model == "leaky":
         return [(0.01, 1.0, 0.5), (0.1, 5.0, 0.2), (0.001, 0.3, 1.0)]
     return [(0.01, a, 1.0, 0.5) for a in (0.01, 0.3, 3.0)] + [(0.1, 1.0, 5.0, 0.2)]
+
+
+# ---- fitting, converged version ----------------------------------------------
+# The greedy search above often stops before the maximum (Nov 18, 2026: 9 of 39 leaky fits had a lower
+# log-likelihood than the unbounded fit nested in them). The converged fits are the primary Study A and
+# B1b results; the greedy-search fits are kept as the reproduction of the paper's procedure.
+# Rules, fixed before any converged fit was run:
+#   1. Same models, likelihood, choice rule and parameter limits (BOUNDS). WIDE_BOUNDS (tau down to 1e-6,
+#      lam up to 1e5) is a sensitivity check only.
+#   2. Search on log lam, log tau, log alpha and logit eps, with the limits enforced on that scale.
+#   3. Starts: the greedy-search fit of the same model to the same data; for the unbounded model also
+#      the greedy search's default starts; the nested start (leaky: the unbounded optimum with eps at its
+#      lower limit; bounded: the leaky optimum with alpha 0.001, 0.1 and 1); one start on the weak-evidence
+#      ridge (eps 0.45, lam 0.3, tau 0.002, alpha 1); any extra starts the caller passes (for example the
+#      primary fit, when refitting with wider limits).
+#   4. From each start: bounded Nelder-Mead (initial step 0.5 on the search scale), rerun from its own
+#      result until a rerun gains less than 0.01 log-likelihood (at most 10 runs). The best start wins.
+#   5. Check: the leaky fit is at least the unbounded fit minus 0.01 (the nested start ensures it);
+#      otherwise the fit stops with an error.
+#   6. A parameter within 1% of the limit range (on the search scale) of a limit is listed in "at_limit".
+WIDE_BOUNDS = {**BOUNDS, "lam": (1e-3, 1e5), "tau": (1e-6, 1e2)}
+NEST_TOL = 0.01
+RIDGE_START = {"eps": 0.45, "alpha": 1.0, "lam": 0.3, "tau": 2e-3}
+NESTED = {"leaky": "unbounded", "bounded": "leaky"}
+
+
+def _to_x(name, v):
+    return float(np.log(v / (1 - v))) if name == "eps" else float(np.log(v))
+
+
+def _from_x(name, x):
+    return float(1 / (1 + np.exp(-x))) if name == "eps" else float(np.exp(x))
+
+
+def _polish(task, model, games, cache, start, limits, step=0.5, tol=0.01, max_runs=10):
+    """Bounded Nelder-Mead on the search scale, rerun from its own result until a rerun gains < tol."""
+    from scipy.optimize import minimize
+
+    names = MODELS[model]
+    lo = np.array([_to_x(k, limits[k][0]) for k in names])
+    hi = np.array([_to_x(k, limits[k][1]) for k in names])
+    evals = 0
+
+    def nll(x):
+        nonlocal evals
+        evals += 1
+        v = -loglik(task, model, {k: _from_x(k, xi) for k, xi in zip(names, x)}, games, cache)
+        return v if np.isfinite(v) else 1e12
+
+    x = np.clip([_to_x(k, start[k]) for k in names], lo, hi)
+    best = nll(x)
+    runs = 0
+    while runs < max_runs:
+        runs += 1
+        simplex = [x.copy()]
+        for i in range(len(names)):
+            v = x.copy()
+            v[i] = v[i] + step if v[i] + step <= hi[i] else v[i] - step
+            simplex.append(v)
+        r = minimize(nll, x, method="Nelder-Mead", bounds=list(zip(lo, hi)),
+                     options={"initial_simplex": np.array(simplex), "xatol": 1e-4, "fatol": 1e-4, "maxfev": 4000})
+        gain = best - r.fun
+        if r.fun < best:
+            x, best = np.clip(r.x, lo, hi), float(r.fun)
+        if gain < tol:
+            break
+    params = {k: _from_x(k, xi) for k, xi in zip(names, x)}
+    pos = (x - lo) / (hi - lo)
+    at_limit = [k for k, f in zip(names, pos) if f < 0.01 or f > 0.99]
+    return params, -best, evals, runs, at_limit
+
+
+def fit_converged(task, model, games, cache=None, paper=None, nested=None, bounds=None, extra_starts=(), seed=0):
+    """Maximum-likelihood fit by the rules above.
+    paper: the greedy-search fit of this model to the same data (run here when not given);
+    nested: the converged parameters of the next-simpler model (unbounded for leaky, leaky for bounded);
+    extra_starts: further parameter dicts to start from."""
+    limits = bounds or BOUNDS
+    names = MODELS[model]
+    if paper is None:
+        paper = fit(task, model, games, cache=cache, seed=seed)
+    starts = [("greedy_search", paper["params"])]
+    if model == "unbounded":
+        starts += [("default", dict(zip(names, s))) for s in _default_starts(model)]
+    if nested is not None and model == "leaky":
+        starts.append(("nested", {**nested, "eps": limits["eps"][0]}))
+    if nested is not None and model == "bounded":
+        starts += [("nested", {**nested, "alpha": a}) for a in (1e-3, 0.1, 1.0)]
+    if model != "unbounded":
+        starts.append(("ridge", {k: RIDGE_START[k] for k in names}))
+    starts += [("extra", s) for s in extra_starts]
+    tried, best, evals = [], None, 0
+    for label, s in starts:
+        p, ll, ev, runs, at_limit = _polish(task, model, games, cache, s, limits)
+        evals += ev
+        tried.append({"start": label, "loglik": ll, "runs": runs})
+        if best is None or ll > best[1]:
+            best = (p, ll, at_limit)
+    p, ll, at_limit = best
+    k = len(names)
+    return {"model": model, "procedure": "converged", "params": p, "loglik": ll, "k": k, "aic": 2 * k - 2 * ll,
+            "evals": evals, "at_limit": at_limit, "limits": {n: list(limits[n]) for n in names},
+            "greedy_search_loglik": paper["loglik"], "starts": tried}
+
+
+def fit_converged_models(task, models, games, cache=None, paper=None, bounds=None, extra=None, seed=0):
+    """Converged fits of `models` in nesting order, each using the previous model's optimum as a start.
+    paper / extra: {model: greedy-search fit} / {model: [parameter dicts]} for the same data."""
+    paper, extra, out = paper or {}, extra or {}, {}
+    for m in [m for m in MODELS if m in models]:
+        prev = NESTED.get(m)
+        out[m] = fit_converged(task, m, games, cache, paper.get(m), out[prev]["params"] if prev in out else None,
+                               bounds, extra.get(m, ()), seed)
+    if "unbounded" in out and "leaky" in out and out["leaky"]["loglik"] < out["unbounded"]["loglik"] - NEST_TOL:
+        raise RuntimeError(f"leaky fit ({out['leaky']['loglik']:.3f}) below the nested unbounded fit "
+                           f"({out['unbounded']['loglik']:.3f})")
+    return out

@@ -13,6 +13,11 @@ Decision temperature is fixed at 1 (not identifiable from final codes under a un
   M2s  symmetric approximation              l = (1 - nu) pi_s(alpha) + nu / 2       params: alpha, nu, zeta
   M3   evidence retention                   clue i kept with r_i = sigmoid(k0 + k1 * age_i),
                                             age 0 = newest; exact over the 2^k kept subsets   params: k0, k1, zeta
+
+Exploratory (added after the planned comparison, motivated by the error profile; not part of it):
+  M1a  two-rate noisy evidence use          l = (1 - nu_x) c + nu_r (1 - c)                    params: nu_x, nu_r, zeta
+       nu_x: a clue wrongly rules out a code it allows; nu_r: a clue wrongly keeps a code it rules out.
+       nu_x = nu_r = nu / 2 is M1; nu_x = 0 is the one-sided (conservative) error pattern.
 """
 from itertools import product
 
@@ -22,10 +27,12 @@ from scipy.special import expit, logit
 
 from mastermind.engine import get_game
 
+PLANNED = ["M0", "M1", "M2c", "M2s", "M3"]
+EXPLORATORY = ["M1a"]
 MODELS = {"M0": ["zeta"], "M1": ["nu", "zeta"], "M2c": ["alpha", "nu", "zeta"],
-          "M2s": ["alpha", "nu", "zeta"], "M3": ["k0", "k1", "zeta"]}
-TRANSFORM = {"zeta": "unit", "nu": "unit", "alpha": "log", "k0": "real", "k1": "real"}
-START = {"zeta": 0.1, "nu": 0.1, "alpha": 0.3, "k0": 2.0, "k1": -0.5}
+          "M2s": ["alpha", "nu", "zeta"], "M3": ["k0", "k1", "zeta"], "M1a": ["nu_x", "nu_r", "zeta"]}
+TRANSFORM = {"zeta": "unit", "nu": "unit", "alpha": "log", "k0": "real", "k1": "real", "nu_x": "unit", "nu_r": "unit"}
+START = {"zeta": 0.1, "nu": 0.1, "alpha": 0.3, "k0": 2.0, "k1": -0.5, "nu_x": 0.1, "nu_r": 0.1}
 
 
 class Item:
@@ -44,6 +51,8 @@ def clue_weights(model, p, item, caches):
         return item.c
     if model == "M1":
         return (1 - p["nu"]) * item.c + p["nu"] / 2
+    if model == "M1a":
+        return (1 - p["nu_x"]) * item.c + p["nu_r"] * (1 - item.c)
     rep = caches["M2c" if model == "M2c" else "M2s"].representation(p["alpha"])
     pi = np.stack([rep[q, o] for q, o in item.clues])
     return (1 - p["nu"]) * pi + p["nu"] / 2
@@ -100,7 +109,10 @@ def _from_vec(model, v):
 
 def fit(model, items, caches=None, starts=None):
     """Maximum likelihood with Nelder-Mead on transformed parameters, several starts."""
-    starts = starts or [START] + [{**START, "alpha": a, "zeta": z} for a in (0.03, 3.0) for z in (0.02, 0.3)]
+    if starts is None:
+        starts = [START] + [{**START, "alpha": a, "zeta": z} for a in (0.03, 3.0) for z in (0.02, 0.3)]
+        if "nu_x" in MODELS[model]:  # one-sided starting points for the two noise rates
+            starts += [{**START, "nu_x": 0.3, "nu_r": 0.05}, {**START, "nu_x": 0.05, "nu_r": 0.3}]
     best = None
     for s in starts:
         v0 = _to_vec(model, {k: s[k] for k in MODELS[model]})

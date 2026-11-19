@@ -1,4 +1,4 @@
-"""B2 and C-a: the diagnostic battery on the fixed state families.
+"""B2: the diagnostic battery on the fixed state families.
 
 Tasks per family:
   classify         full history; test codes = still possible (up to 6), near misses ruled out only
