@@ -78,18 +78,19 @@ def main():
     ap.add_argument("--splits", nargs="+", required=True)
     ap.add_argument("--samples", type=int, default=4)
     ap.add_argument("--workers", type=int, default=64)
+    ap.add_argument("--max-tokens", type=int, help="reply cap for every call (default: the registry value); added to the output name")
     args = ap.parse_args()
 
     mm = get_game(4, 4)
     families = [f for f in json.loads(FAMILIES.read_text()) if f["split"] in args.splits]
     jobs = build_jobs(mm, families, args.condition, args.samples)
-    client = Client(args.model, condition=args.condition)
+    client = Client(args.model, condition=args.condition, max_tokens=args.max_tokens)
     print(f"{len(families)} families, {len(jobs)} calls", flush=True)
     recs = client.batch([(j["prompt"], f"{j['meta']['family_id']}:{j['meta']['task']}:{j['meta']['clue_index']}:{j['sample']}") for j in jobs],
                         workers=args.workers)
 
     OUT.mkdir(parents=True, exist_ok=True)
-    path = OUT / f"{args.model}_{args.condition}_{'+'.join(args.splits)}.jsonl"
+    path = OUT / (f"{args.model}_{args.condition}_{'+'.join(args.splits)}" + (f"_cap{args.max_tokens}" if args.max_tokens else "") + ".jsonl")
     parsed = 0
     tmp = path.with_suffix(f".tmp{os.getpid()}")
     with open(tmp, "w") as f:

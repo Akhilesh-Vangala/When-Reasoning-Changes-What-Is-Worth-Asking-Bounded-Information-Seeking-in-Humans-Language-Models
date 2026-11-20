@@ -40,6 +40,24 @@ sbatch $G qwen3-32b experiments/study_b/probe_battery.py --model qwen3-32b --con
 sbatch $G qwen3-32b experiments/study_b/usefulness_choice.py --model qwen3-32b --condition T0 \
     --splits choice_calibration --pairs-per-family 2 --branch-samples 4 --choice-samples 8           # native choice
 ```
+
+Study C (Qwen3-32B; c = T1, T2, T3 for the battery, T0 and T3 for usefulness):
+```
+sbatch $G qwen3-32b experiments/study_b/probe_battery.py --model qwen3-32b --condition c \
+    --splits processing_calibration confirmation --samples 4                                       # C-a battery
+sbatch $G qwen3-32b experiments/study_b/usefulness_choice.py --model qwen3-32b --condition c \
+    --splits support_calibration --pairs-per-family 2 --branch-samples 4 --choice-samples 8        # C-c calibration
+                                                                       # (and --splits choice_calibration under T3)
+sbatch --gres=gpu:l40s:2 --mem=96G $G qwen3-32b experiments/study_c/cap_pilot.py --model qwen3-32b \
+    --max-tokens 15000 --n-t3 200 --n-t0 60 --workers 24                                           # cap pilot
+```
+The confirmation run is in `experiments/study_c/README.md`.
+
+The language-model client waits up to 4 hours for a reply and never retries on its own (`mastermind/llm.py`). An
+earlier version timed out at 600 s and retried silently; a timeout aborts the request on the server, so on a busy
+node long replies were redrawn until a short one finished. Every cached reply records its total time
+(`duration_s`); an audit of all of them found redrawn replies only in Qwen3-32B's B1 game play and in a first cap
+pilot, which was discarded and rerun.
 The Claude models run from a workstation (`screen_models.py` and `play_games.py` with `--model claude-haiku-5-5`
 or `claude-opus-5-5`; the API key in `.env`).
 

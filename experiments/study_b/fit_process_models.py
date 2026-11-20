@@ -64,6 +64,8 @@ CACHES = {"M2c": ROOT / "data/model_cache/bounded_cache_v1.npz", "M2s": ROOT / "
 def load_records(model, condition):
     rows = []
     for path in sorted(glob.glob(str(BATTERY / f"{model}_{condition}_*.jsonl"))):
+        if "_cap" in Path(path).name:  # runs at a different reply cap are a different setting, never mixed in
+            continue
         rows += [json.loads(line) for line in open(path)]
     seen, out = set(), []
     for r in rows:  # the same item can appear in two files (e.g. development run)

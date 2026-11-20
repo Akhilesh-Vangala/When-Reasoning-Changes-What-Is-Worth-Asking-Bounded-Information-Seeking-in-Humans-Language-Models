@@ -7,8 +7,9 @@ seeing q's answer.
 Predicted U under a process model with the support map:
   l'_i(s) = (1 - delta) l_i(s) + delta c_i(s)     (delta = 0 in the baseline condition)
   P(d | clues) = (1 - zeta) b(d) + zeta / 256,     b proportional to prod_i l'_i(d)
-The support map moves every clue weight toward the exact constraint, so the aid helps most where the
-base model distorts most, which differs across queries (this is what makes Gamma selective).
+The support map moves every clue weight toward the exact constraint (delta > 0) or away from it (delta < 0;
+weights are kept in [0, 1]), so the aid changes usefulness most where the base model distorts most, which
+differs across queries (this is what makes Gamma selective).
 """
 from itertools import product
 
@@ -23,7 +24,7 @@ def identification_probs(model, p, clues, c, caches, delta=0.0):
     n = c.shape[1]
     if model == "M3":
         k = c.shape[0]
-        r = (1 - delta) * expit(p["k0"] + p["k1"] * np.arange(k)[::-1]) + delta
+        r = np.clip((1 - delta) * expit(p["k0"] + p["k1"] * np.arange(k)[::-1]) + delta, 0.0, 1.0)
         b = np.zeros(n)
         for kept in product([0, 1], repeat=k):
             kept = np.array(kept, bool)
@@ -34,7 +35,7 @@ def identification_probs(model, p, clues, c, caches, delta=0.0):
         item = pm.Item.__new__(pm.Item)
         item.clues, item.c = clues, c
         l_ = pm.clue_weights(model, p, item, caches)
-        l_ = (1 - delta) * l_ + delta * c
+        l_ = np.clip((1 - delta) * l_ + delta * c, 0.0, 1.0)  # delta < 0 moves weights away from the exact clue
         g = np.prod(l_, axis=0)
         b = g / g.sum()
     return (1 - p["zeta"]) * b + p["zeta"] / n

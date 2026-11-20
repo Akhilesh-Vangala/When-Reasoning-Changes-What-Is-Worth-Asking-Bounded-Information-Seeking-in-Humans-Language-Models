@@ -15,4 +15,6 @@ File and folder suffixes: none = the paper's greedy search; `_converged` = conve
 | `study_b/battery/` | B2 probe-battery records (Qwen3-32B, T0) |
 | `study_b/process_fits/` | B3 fits, family-bootstrap resamples, intervals, error profile, product-rule check and M1a confirmation |
 | `study_b/process_recovery*/` | B3 recovery replicates (planned design; at the fitted values) |
-| `study_b/usefulness_choice/`, `study_b/native_choice/` | native question choice: records and analysis |
+| `study_b/usefulness_choice/`, `study_b/native_choice/` | native question choice: records and analysis; usefulness and choice records under T0 and T3 on the calibration families (Study C calibration) |
+| `study_b/battery/*_T1–T3_*`, `study_b/process_fits/*T1–T3*` | Study C aid conditions: probe-battery records, process-model fits and family-bootstrap resamples |
+| `study_c/` | C-a aid effects (`ca_aid_effects.json`), reply-cap pilot, C-c calibration and power analysis, exploratory choice-shift check on the calibration pairs |

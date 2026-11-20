@@ -38,13 +38,15 @@ def load_registry():
 
 
 class Client:
-    def __init__(self, model_key, base_url=None, condition="T0"):
+    def __init__(self, model_key, base_url=None, condition="T0", max_tokens=None):
         reg = load_registry()[model_key]
         self.key = model_key
         self.provider = reg.get("provider", "vllm")
         self.model = reg["hf_id"]
         self.revision = reg["revision"]
         self.decoding = dict(reg["decoding"])
+        if max_tokens:  # a different reply cap is a different setting: part of the cache key and every record
+            self.decoding["max_tokens"] = int(max_tokens)
         thinking = condition == "T4"
         self.extra = dict(reg.get("thinking_on" if thinking else "thinking_off", {}))
         self.base_url = base_url or os.environ.get("VLLM_BASE_URL", "http://localhost:8000/v1")
@@ -143,7 +145,9 @@ class Client:
         if self._client is None:
             from openai import OpenAI
 
-            self._client = OpenAI(base_url=self.base_url, api_key="EMPTY", timeout=600)
+            # A client timeout aborts the request on the server, so a long reply on a busy server must not time out:
+            # the timeout is generous and this loop is the only retry.
+            self._client = OpenAI(base_url=self.base_url, api_key="EMPTY", timeout=4 * 3600, max_retries=0)
         for attempt in range(retries):
             try:
                 resp = self._client.chat.completions.create(

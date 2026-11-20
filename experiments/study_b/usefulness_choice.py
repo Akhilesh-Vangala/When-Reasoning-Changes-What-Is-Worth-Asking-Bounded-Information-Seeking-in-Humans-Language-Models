@@ -14,6 +14,9 @@ human Experiment 2; pair metadata records EIG, V* = m/K and digit counts for bot
 
   python experiments/study_b/usefulness_choice.py --model qwen3-32b --condition T0 \
       --splits choice_calibration --pairs-per-family 2 --branch-samples 4 --choice-samples 8
+Long runs can be split across jobs: `--shard i --shards n` makes every n-th call (disjoint parts, so no reply is
+ever generated twice) and only fills the reply cache; a final run without --shard reads every reply from the
+cache and writes the files.
 """
 import argparse
 import json
@@ -72,12 +75,18 @@ def main():
     ap.add_argument("--branch-samples", type=int, default=4)
     ap.add_argument("--choice-samples", type=int, default=8)
     ap.add_argument("--pairs-file", help="fixed pair manifest (C-c confirmation); otherwise pairs are drawn")
+    ap.add_argument("--families", default=str(FAMILIES), help="family file (default: data/splits/families_v1.json)")
     ap.add_argument("--workers", type=int, default=64)
+    ap.add_argument("--max-tokens", type=int, help="reply cap for every call (default: the registry value); added to the output name")
+    ap.add_argument("--shard", type=int, default=0, help="this job's part (0-based) when the calls are split across jobs")
+    ap.add_argument("--shards", type=int, default=1, help="number of jobs the calls are split across")
     args = ap.parse_args()
+    if not 0 <= args.shard < args.shards:
+        ap.error("--shard must be between 0 and --shards - 1")
 
     mm = get_game(4, 4)
     rng = np.random.default_rng(7)
-    fams = [f for f in json.loads(FAMILIES.read_text()) if f["split"] in args.splits]
+    fams = [f for f in json.loads(Path(args.families).read_text()) if f["split"] in args.splits]
     fixed = json.loads(Path(args.pairs_file).read_text()) if args.pairs_file else None
 
     pair_rows, jobs = [], []
@@ -101,13 +110,18 @@ def main():
                 prompt, th = prompts.build(mm, "choice", args.condition, hist, a=mm.index(a_q), b=mm.index(b_q))
                 jobs.append({"kind": "choice", "pair_id": pid, "A": a_q, "B": b_q, "prompt": prompt, "template": th, "sample": s})
 
-    client = Client(args.model, condition=args.condition)
+    client = Client(args.model, condition=args.condition, max_tokens=args.max_tokens)
     print(f"{len(fams)} families, {len(pair_rows)} pairs, {len(jobs)} calls", flush=True)
-    recs = client.batch([(j["prompt"], f"{j['pair_id']}:{j['kind']}:{j.get('query', '')}:{j.get('outcome', '')}:{j['sample']}") for j in jobs],
-                        workers=args.workers)
+    calls = [(j["prompt"], f"{j['pair_id']}:{j['kind']}:{j.get('query', '')}:{j.get('outcome', '')}:{j['sample']}") for j in jobs]
+    if args.shards > 1:  # a part only fills the reply cache; the final run without --shard writes the files
+        part = calls[args.shard::args.shards]
+        client.batch(part, workers=args.workers)
+        print(f"part {args.shard} of {args.shards}: {len(part)} calls cached", flush=True)
+        return
+    recs = client.batch(calls, workers=args.workers)
 
     OUT.mkdir(parents=True, exist_ok=True)
-    tag = f"{args.model}_{args.condition}_{'+'.join(args.splits)}"
+    tag = f"{args.model}_{args.condition}_{'+'.join(args.splits)}" + (f"_cap{args.max_tokens}" if args.max_tokens else "")
     (OUT / f"{tag}_pairs.json").write_text(json.dumps(pair_rows, indent=1))
     fam_hist = {f["family_id"]: [(mm.index(g), (b, w)) for g, b, w in f["history"]] for f in fams}
     tmp = OUT / f"{tag}.jsonl.tmp{os.getpid()}"

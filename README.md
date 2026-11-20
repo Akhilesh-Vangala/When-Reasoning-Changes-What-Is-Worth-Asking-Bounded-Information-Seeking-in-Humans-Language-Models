@@ -15,7 +15,9 @@ Mastermind (256 codes), where ideal Bayesian inference is exact.
 3. **Study C, capacity manipulation:** give that model a structured reasoning aid and test whether the fitted models
    predict how the aid changes the usefulness of each question.
 
-This repository contains Studies A and B. Study C is not part of it yet.
+This repository contains Studies A and B and Study C so far: the aid's effect on evidence use (C-a) and the
+preregistered confirmation test (`prereg/`: analysis plan and prediction lock, committed before any confirmation
+data were collected).
 
 ## Main results
 
@@ -51,7 +53,9 @@ experiments/
   study_a/           human reproduction, representation cache, model fits, recovery
   study_b/           model screening, game play (B1), human models fitted to model play (B1b),
                      probe battery (B2), process-model comparison (B3), native question choice
+  study_c/           aid effects (C-a), reply-cap pilot, fresh families, prediction test (C-c), choice shift (C-b)
   hpc/               SLURM job scripts and the list of cluster runs
+prereg/              Study C analysis plan and prediction lock
   reproduce_summaries.sh   regenerates every reported number from the saved records and fits
 configs/             model registry, model selection and frozen prompt templates
 data/
