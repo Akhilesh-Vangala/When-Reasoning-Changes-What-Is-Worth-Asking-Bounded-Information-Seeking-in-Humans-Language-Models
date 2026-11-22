@@ -61,6 +61,34 @@ prediction lock in `prereg/` were committed and registered on OSF before any con
 **Primary tests across studies** (`results/README.md`): Holm across B1, B3 and C-b. Only Haiku's and Opus's B1
 effects are significant, and they go in the ideal player's direction, not the human one.
 
+## What the proposal set out to do, and where it is
+
+Every commitment of the approved proposal, in its order, with the section that reports it. Status: ✓ done as
+proposed; ◐ done with a stated limit.
+
+| | Proposal | Status | Where |
+|---|---|---|---|
+| A1 | Use the released Mastermind data from three experiments | ✓ | `results/study_a/README.md`, Behavior (E1, E2, E3) |
+| A2 | Reproduce: people solve games faster after simpler guesses | ✓ | Study A, Behavior (E1 regression and signature effect) |
+| A3 | Reproduce: people choose simpler, less informative queries | ✓ | Study A, Behavior (E2) |
+| A4 | Reproduce the free-play comparison of the bounded model with noisy-inference and ideal-observer accounts | ✓ | Study A, Model comparison (both fitting procedures, held-out people, recovery) |
+| B1 | Open-weight models across capabilities, possibly proprietary ones | ✓ | `results/study_b/README.md`, Models (four open-weight, two proprietary) |
+| B2 | Continue games from the participants' starting positions, after informative but complex and after simpler guesses | ✓ | Study B, B1 |
+| B3 | Play full games, each guess scored against the ideal Bayesian player | ✓ | Study B, B1 free play (EIG and V* of every guess relative to the best) |
+| B4 | Fit the same human model to their play and compare it with the rival accounts by AIC | ◐ | Study B, B1b. Fitted for the three models that solve at least half their games; the rule was set after the solve rates were seen (Departures, item 2) |
+| B5 | Compare the fitted parameters with people's | ✓ | Study B, B1b (α and ΔAIC per decision placed among the 39 people) |
+| B6 | Do the models play better after simpler guesses, as people do? | ✓ | Study B, B1 |
+| B7 | Do they prefer interpretable queries, as people do? | ◐ | Query structure in every model's free play; the Experiment 2-style choice only for Qwen3-32B (Departures, item 14) |
+| B8 | How these patterns change with capability | ✓ | Study B, Capability (descriptive) |
+| B9 | One model in depth: probes of which codes are still possible | ✓ | Study B, B2 (Qwen3-32B) |
+| B10 | Compare exact-inference, noisy-evidence and representational-approximation accounts | ✓ | Study B, B3 |
+| B11 | Parameter and model recovery | ✓ | Study B, B3 recovery (planned design and fitted values) |
+| C1 | A structured aid that checks candidate codes against each clue step by step | ✓ | `results/study_c/README.md` (T3) |
+| C2 | Compare it with standard and length-matched prompts; measure how it changes evidence use | ✓ | Study C, C-a |
+| C3 | Usefulness: the probability that the model names the secret after a question's answer | ✓ | Study C, C-c Measure |
+| C4 | Do the model's own choices shift toward the questions the aid makes more useful? | ✓ | Study C, C-b (H4) |
+| C5 | Can the fitted models predict how the aid changes each question's usefulness on held-out states, preregistered, against difficulty baselines? | ✓ | Study C, C-c (H3); `prereg/` (OSF) |
+
 ## Repository layout
 
 ```
