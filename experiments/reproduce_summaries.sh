@@ -1,5 +1,5 @@
 #!/bin/bash
-# Regenerate every reported number of Studies A–C from the saved records and fits.
+# Regenerate every reported number and figure of Studies A–C from the saved records and fits.
 # No language-model calls and no refits: the fits themselves come from the cluster jobs in experiments/hpc/
 # (their commands are listed in experiments/hpc/README.md). Study C's calibration, power analysis and lock are
 # not rerun: they are fixed inputs of the preregistered test. Run from the repository root:
@@ -56,3 +56,5 @@ run experiments/study_c/prediction_test.py score
 run experiments/study_c/choice_shift.py --split c_confirmation
 run experiments/study_c/noise_check.py
 run experiments/primary_tests.py
+# Figures for the paper and poster (results/figures/)
+run experiments/make_figures.py

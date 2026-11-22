@@ -72,6 +72,7 @@ experiments/
                      probe battery (B2), process-model comparison (B3), native question choice
   study_c/           aid effects (C-a), reply-cap pilot, fresh families, prediction test (C-c), choice shift (C-b)
   primary_tests.py   Holm correction across the primary tests of the three studies
+  make_figures.py    the paper's figures, from the saved results (results/figures/)
   hpc/               SLURM job scripts and the list of cluster runs
   reproduce_summaries.sh   regenerates every reported number from the saved records and fits
 prereg/              Study C analysis plan and prediction lock
@@ -98,7 +99,7 @@ cluster (`experiments/hpc/`); everything else runs on a laptop.
 ## Reproducing the results
 
 ```
-bash experiments/reproduce_summaries.sh     # every summary, from the saved records and fits; no model calls or refits
+bash experiments/reproduce_summaries.sh     # every summary and figure, from the saved records and fits; no model calls or refits
 ```
 
 The model fits run on a cluster; `experiments/hpc/README.md` lists every job. The human models are fitted in two

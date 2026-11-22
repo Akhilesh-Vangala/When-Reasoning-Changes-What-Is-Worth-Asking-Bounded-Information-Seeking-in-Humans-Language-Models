@@ -22,6 +22,7 @@ File and folder suffixes:
 | `study_b/battery/*_T1–T3_*`, `study_b/process_fits/*T1–T3*` | Study C aid conditions: probe-battery records, process-model fits and family-bootstrap resamples |
 | `study_c/` | C-a aid effects (`ca_aid_effects.json`); reply-cap pilot; C-c calibration (`cc_calibration.json`), power analysis (`cc_power.json`) and preregistered score (`cc_score.json`); C-b choice shift on the confirmation pairs (preregistered) and on the calibration pairs (exploratory); post hoc design check (`cc_noise_check.json`) |
 | `primary_tests.json` | Holm correction across the course's primary tests (below) |
+| `figures/` | the five figures for the paper and poster (PDF and PNG), with their captions in `figures/README.md` |
 
 ## Primary tests across studies (`primary_tests.json`)
 

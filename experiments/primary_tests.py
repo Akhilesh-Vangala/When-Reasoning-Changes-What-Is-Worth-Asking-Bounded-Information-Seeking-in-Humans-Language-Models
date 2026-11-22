@@ -46,7 +46,9 @@ def b1_tests():
     return tests
 
 
-def b3_test(model="qwen3-32b", condition="T0", rivals=("M0", "M1")):
+def heldout_by_family(model="qwen3-32b", condition="T0"):
+    """B3 held-out log likelihood per (confirmation family, model) at the saved parameters, and the family
+    resamples of the intervals file (same seed). Returns (models, ll [family, model], boots, intervals file)."""
     iv = json.loads((F.OUT / f"{model}_{condition}_intervals.json").read_text())
     saved = json.loads((F.OUT / f"{model}_{condition}.json").read_text())
     mm = F.get_game(4, 4)
@@ -61,6 +63,11 @@ def b3_test(model="qwen3-32b", condition="T0", rivals=("M0", "M1")):
             ll[index[fam], j] += F.pm.item_loglik(m, F.planned_fit(saved, m)["params"], it, caches)
     rng = np.random.default_rng(iv["bootstrap"]["seed"])  # the same resamples as the intervals file
     boots = rng.integers(len(fams), size=(iv["bootstrap"]["resamples"], len(fams)))
+    return models, ll, boots, iv
+
+
+def b3_test(model="qwen3-32b", condition="T0", rivals=("M0", "M1")):
+    models, ll, boots, iv = heldout_by_family(model, condition)
     best = iv["best_planned_heldout"]
     comp = {}
     for r in rivals:
