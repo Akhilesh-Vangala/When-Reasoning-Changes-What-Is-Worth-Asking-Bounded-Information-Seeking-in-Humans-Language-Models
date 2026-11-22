@@ -31,8 +31,12 @@ Language-model runs (`G=experiments/hpc/serve_and_run.sbatch`; some ran with `--
 ```
 sbatch $G <model> experiments/study_b/screen_models.py --model <model>              # screening
 sbatch $G <model> experiments/study_b/play_games.py --model <model> --mode both     # B1, every admitted open-weight model
-sbatch $G qwen3-32b experiments/study_b/play_games.py --model qwen3-32b --mode e1 --condition T3 --shard i --shards 4
-                                                     # aid arm in 4 parts (i = 0..3), then once without --shard to assemble
+#   Qwen3-32B's B1 (rerun with the corrected client; see below). e1 under T3 ran in 6 parts and under T0 in 4,
+#   on 2 L40S GPUs each, and free play ran in one job; each e1 set then ran once without --shard on CPU to assemble.
+sbatch --gres=gpu:l40s:2 --mem=96G --time=24:00:00 $G qwen3-32b experiments/study_b/play_games.py --model qwen3-32b \
+    --mode e1 --condition T3 --shard i --shards 6        # i = 0..5; T0: --condition T0 --shards 4
+sbatch --gres=gpu:l40s:2 --mem=96G $G qwen3-32b experiments/study_b/play_games.py --model qwen3-32b --mode free
+sbatch --array=0 experiments/hpc/cpu_array.sbatch experiments/study_b/play_games.py --model qwen3-32b --mode e1 --condition T3
 sbatch $G qwen3-32b experiments/study_b/probe_battery.py --model qwen3-32b --condition T0 \
     --splits development processing_calibration confirmation --samples 4                              # B2 battery
 sbatch $G qwen3-32b experiments/study_b/probe_battery.py --model qwen3-32b --condition T0 \
@@ -57,7 +61,7 @@ The language-model client waits up to 4 hours for a reply and never retries on i
 earlier version timed out at 600 s and retried silently; a timeout aborts the request on the server, so on a busy
 node long replies were redrawn until a short one finished. Every cached reply records its total time
 (`duration_s`); an audit of all of them found redrawn replies only in Qwen3-32B's B1 game play and in a first cap
-pilot, which was discarded and rerun.
+pilot. Both were set aside and rerun from scratch with the corrected client.
 The Claude models run from a workstation (`screen_models.py` and `play_games.py` with `--model claude-haiku-5-5`
 or `claude-opus-5-5`; the API key in `.env`).
 

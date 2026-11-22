@@ -1,7 +1,8 @@
 #!/bin/bash
-# Regenerate every reported Study A and Study B number from the saved records and fits.
+# Regenerate every reported number of Studies A–C from the saved records and fits.
 # No language-model calls and no refits: the fits themselves come from the cluster jobs in experiments/hpc/
-# (their commands are listed in experiments/hpc/README.md). Run from the repository root:
+# (their commands are listed in experiments/hpc/README.md). Study C's calibration, power analysis and lock are
+# not rerun: they are fixed inputs of the preregistered test. Run from the repository root:
 #   bash experiments/reproduce_summaries.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -47,3 +48,11 @@ run experiments/study_b/fit_process_models.py confirm --model qwen3-32b --condit
 run experiments/study_b/recover_process_models.py summarize
 run experiments/study_b/recover_process_models.py summarize --fitted qwen3-32b_T0
 run experiments/study_b/native_choice.py --model qwen3-32b
+# Study C: C-a, the exploratory choice-shift look on the calibration pairs, the preregistered score (it checks the
+# lock's hashes first) and choice shift, the post hoc design check, and Holm across the primary tests
+run experiments/study_c/aid_effects.py
+run experiments/study_c/choice_shift.py --split support_calibration choice_calibration
+run experiments/study_c/prediction_test.py score
+run experiments/study_c/choice_shift.py --split c_confirmation
+run experiments/study_c/noise_check.py
+run experiments/primary_tests.py

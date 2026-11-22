@@ -15,9 +15,8 @@ Mastermind (256 codes), where ideal Bayesian inference is exact.
 3. **Study C, capacity manipulation:** give that model a structured reasoning aid and test whether the fitted models
    predict how the aid changes the usefulness of each question.
 
-This repository contains Studies A and B and Study C so far: the aid's effect on evidence use (C-a) and the
-preregistered confirmation test (`prereg/`: analysis plan and prediction lock, committed before any confirmation
-data were collected).
+This repository contains all three studies. Study C's confirmation test was preregistered: the analysis plan and
+prediction lock in `prereg/` were committed and registered on OSF before any confirmation data were collected.
 
 ## Main results
 
@@ -44,6 +43,24 @@ data were collected).
 - **Native question choice:** Qwen3's choices follow the informativeness and structure of queries, not how useful
   a query is to it.
 
+**Study C** (`results/study_c/README.md`; Qwen3-32B with a structured reasoning aid)
+- **C-a:** the aid does not make evidence use more exact. Clue-checking errors do not fall, and the fitted noise
+  of evidence use rises (ν 0.42 → 0.52). Finished replies identify a still-possible code more often, but far more
+  replies run out of room. A generic "check your work" prompt does at least as well.
+- **C-c (H3, preregistered): not supported.**
+  - The fitted model predicts how the aid changes each question's usefulness no better than any of four simpler
+    rivals; every point estimate favors the rival.
+  - Across 360 pairs in 120 fresh families, the aid's effect varies beyond sampling noise, but no predictor
+    anticipates it.
+- **C-b (H4, preregistered): not supported.** The model's own question choices do not follow the aid's change in
+  usefulness (slope −0.63 [−2.50, 1.32]).
+- **Design check (post hoc).** The confirmation data were noisier than the power analysis assumed (realized power
+  about 0.50 at the planned smallest effect, not 0.86). Even so, the point estimates point away from the
+  hypotheses.
+
+**Primary tests across studies** (`results/README.md`): Holm across B1, B3 and C-b. Only Haiku's and Opus's B1
+effects are significant, and they go in the ideal player's direction, not the human one.
+
 ## Repository layout
 
 ```
@@ -54,9 +71,10 @@ experiments/
   study_b/           model screening, game play (B1), human models fitted to model play (B1b),
                      probe battery (B2), process-model comparison (B3), native question choice
   study_c/           aid effects (C-a), reply-cap pilot, fresh families, prediction test (C-c), choice shift (C-b)
+  primary_tests.py   Holm correction across the primary tests of the three studies
   hpc/               SLURM job scripts and the list of cluster runs
-prereg/              Study C analysis plan and prediction lock
   reproduce_summaries.sh   regenerates every reported number from the saved records and fits
+prereg/              Study C analysis plan and prediction lock
 configs/             model registry, model selection and frozen prompt templates
 data/
   stimuli/           the Experiment 1 starting positions, derived from the human data

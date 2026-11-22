@@ -59,12 +59,12 @@ player is faster after Max-EIG histories (−0.59).
   gpt-oss 0.14, Haiku −0.56, Opus −0.79). The hazard check censors every unsolved game after its last guess.
 - **Models below the solve-rate rule** (descriptive: point estimates only, no intervals or tests). Qwen3-32B and
   Phi-4 are slower after Max-EIG histories, the human direction: Max-EIG minus Simple 1.86 and 1.94 (over solved
-  games 0.95 and 2.18; hazard log odds −0.47 and −0.72), and they solve fewer games after them (Qwen3 0.435 vs. 0.58,
+  games 0.97 and 2.18; hazard log odds −0.48 and −0.72), and they solve fewer games after them (Qwen3 0.414 vs. 0.564,
   Phi-4 0.182 vs. 0.327). OLMo-2-32B almost never solves (free play 0.03; Max-EIG minus Simple 0.02). At these solve rates the measure mostly counts
   unsolved games, which is why the rule keeps them out of inference.
-- **Invalid turns** (no valid guess after 2 re-asks): none for gpt-oss, Haiku, Opus, Phi-4 or OLMo; Qwen3-32B 4 of
-  14,306 turns (2 after Max-EIG, 2 after no history). Re-asks were needed on 4.1–6.3% of Qwen3's turns and on at most
-  0.3% of every other model's.
+- **Invalid turns** (no valid guess after 2 re-asks): none for gpt-oss, Haiku, Opus, Phi-4 or OLMo; Qwen3-32B 7 of
+  14,710 turns (4 after Max-EIG, 2 after no history, 1 after Simple). Re-asks were needed on 4.5–7.3% of Qwen3's
+  turns and on at most 0.3% of every other model's.
 
 **Free play** (100 seeded games per model; the Study A measures, computed by the same code for people and models;
 guesses to solve over solved games only; EIG and V* of each guess relative to the best available query):
@@ -74,7 +74,7 @@ guesses to solve over solved games only; EIG and V* of each guess relative to th
 | Phi-4 | 0.19 | 8.11 | 1.215 | 0.066 | 0.478 | 0.571 | 0.002 / 0.271 / 0.267 / 0.460 | 0.00 |
 | OLMo-2-32B | 0.03 | 10.33 | 1.547 | 0.041 | 0.585 | 0.662 | 0.048 / 0.445 / 0.364 / 0.143 | 0.00 |
 | People (E3, 390 games) | 0.864 | 7.72 | 1.611 | 0.312 | 0.652 | 0.635 | 0.184 / 0.213 / 0.421 / 0.183 | 0.45 |
-| Qwen3-32B | 0.41 | 7.49 | 1.691 | 0.139 | 0.658 | 0.662 | 0.008 / 0.117 / 0.346 / 0.529 | 0.00 |
+| Qwen3-32B | 0.44 | 7.70 | 1.724 | 0.154 | 0.686 | 0.678 | 0.006 / 0.125 / 0.366 / 0.503 | 0.00 |
 | gpt-oss-120b | 0.98 | 4.64 | 2.260 | 0.504 | 0.848 | 0.788 | 0.006 / 0.445 / 0.297 / 0.252 | 0.00 |
 | Claude Haiku 5.5 | 1.00 | 4.48 | 2.402 | 0.635 | 0.904 | 0.859 | 0.007 / 0.333 / 0.455 / 0.205 | 0.01 |
 | Claude Opus 5.5 | 1.00 | 3.69 | 2.623 | 0.683 | 0.942 | 0.885 | 0.005 / 0.393 / 0.463 / 0.138 | 0.00 |
@@ -87,7 +87,7 @@ it (at most 5% of guesses, OLMo). Two-color guesses are more common than in peop
 **Capability** (`capability` in `b1_summary.json`; descriptive). Among the models that pass the solve-rate rule,
 the signature effect falls as query quality rises (gpt-oss 0.23, Haiku −0.56, Opus −0.79), and none shows the
 human pattern. The human direction appears only below the rule, in the two models that solve some games (Qwen3-32B,
-whose query quality is closest to people's, 0.658 vs. 0.652, and Phi-4), and not in OLMo-2-32B, which almost
+whose query quality is closest to people's, 0.686 vs. 0.652, and Phi-4), and not in OLMo-2-32B, which almost
 never solves. This is the pattern the plan predicted (human-like at intermediate capability, none for models that
 mostly guess or that approach the ideal player), but it rests on point estimates from models outside the rule, so it
 is not tested here. B1b's per-decision advantage of the bounded model shows no trend with capability (gpt-oss
@@ -95,9 +95,10 @@ is not tested here. B1b's per-decision advantage of the bounded model shows no t
 
 **Aid arm** (`aid_arm_T3` in `b1_summary.json`): Qwen3-32B under T3 (structured constraint checking) on the same
 positions, 1,320 games; descriptive, since Qwen3 is below the solve-rate rule. With the aid it solves fewer games
-after every kind of history than under T0 (Simple 0.43 vs. 0.58, Max-EIG 0.237 vs. 0.435, none 0.305 vs. 0.40) and
-needs more guesses (11.43 vs. 10.21, 13.58 vs. 12.07, 12.81 vs. 12.52); Max-EIG minus Simple is 2.15 vs. 1.86.
-Invalid turns: 6 of 15,687 (re-asks on 3.1–5.5% of turns).
+after every kind of history than under T0 (Simple 0.411 vs. 0.564, Max-EIG 0.267 vs. 0.414, none 0.242 vs. 0.363)
+and needs more guesses (11.64 vs. 10.50, 13.18 vs. 12.37, 13.65 vs. 13.05); Max-EIG minus Simple is 1.54 vs. 1.86.
+The aided replies are longer and more often reach the reply cap before naming a guess: re-asks on 9.0–14.5% of
+turns (T0: 4.5–7.3%) and 54 invalid turns of 15,734 (T0: 7 of 14,710).
 
 ## B1b: the human models fitted to model free play (`b1b_<model>_T0[_converged].json`)
 
@@ -310,6 +311,17 @@ two error rates: ν_x for ruling out a code the clue allows and ν_r for keeping
     Records keep the last 300 characters of each reply; the full replies, re-asks and timestamps are in the
     language-model caches, which are not in the repository. Serving details (vLLM 0.31.0, bf16, quantization,
     hardware) are under `serving` in `configs/model_registry.json`.
+13. **Qwen3-32B's B1 games were rerun.** The language-model client first timed out at 600 s and retried
+    silently. A timeout aborts the request on the server, so on a busy node long replies were redrawn until a
+    short one finished. An audit of every cached reply found it only in Qwen3-32B's game play. Cached replies that took over 600 s
+    in total, the mark of a redraw: 72 in Experiment 1 under T0, 15 in free play and 1,417 in the aid arm. All three sets were set aside and replayed
+    from scratch with the corrected client, which waits up to 4 hours and never retries. Same positions, secrets
+    and settings; no reply was reused. Every Qwen3 B1 number above comes from the rerun.
+
+    No other model's records changed. Regenerating `b1_summary.json` leaves every non-Qwen3 entry identical,
+    including every interval and test. Qwen3's free-play solve rate (0.44, first run 0.41) stays below the
+    solve-rate rule. The descriptive changes are small under T0. In the aid arm, the first run had understated how
+    often aided replies run out of room: re-asks rose from 3.1–5.5% to 9.0–14.5% of turns, invalid turns from 6 to 54.
 
 Bootstrap resamples that ran past their time limit on the cluster were rerun with the same seeds; every summary
 uses all of its resamples (200 refits per B1b fit, 1,000 refits for the B3 calibration bootstrap).
