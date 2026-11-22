@@ -1,7 +1,8 @@
 # Study A: human reproduction and model comparison
 
 Data: Cheyette et al., OSF `vjrqu` (E1, E2, E3).
-Every number below is read from the JSON file named in its row. `bash experiments/reproduce_summaries.sh`
+Every result below is read from the JSON file named in its row (the paper's values, its sample sizes and the
+search settings come from the paper and the code). `bash experiments/reproduce_summaries.sh`
 regenerates them from the saved fits; the scripts are listed in `experiments/study_a/README.md`.
 
 ## Behavior
@@ -56,8 +57,8 @@ The three models are fitted to each person's free-play guesses in two ways, and 
 | Sensitivity: wider parameter limits (τ down to 10⁻⁶, λ up to 10⁵) | 146.9 / 16.1; best 30 / 9 / 0 | | | `e3_model_comparison_converged_wide.json` |
 | Recovery: each model simulates every person (their fitted parameters, same number of solved games); all three refitted | bounded 32/39 (0.82), unbounded 29/39 (0.74), leaky 34/39 (0.87); bounded data come back as leaky for 7, leaky data as bounded for 5; α Spearman 0.95 | bounded 35/39 (0.90), unbounded 29/39 (0.74), leaky 28/39 (0.72); α Spearman 0.91 | | `e3_recovery_summary[_converged].json` |
 
-**Parameters sit at their limits.** In the converged fits the choice temperature τ is at (or within 1% of) its
-lower limit (10⁻³) for 30 of 39 bounded and 37 of 39 leaky fits, and the noise ε is near its upper limit (0.5) for
+**Parameters sit at their limits.** In the converged fits the choice temperature τ is at its lower limit (10⁻³), or within 1%
+of the log search range from it, for 30 of 39 bounded and 37 of 39 leaky fits, and the noise ε is near its upper limit (0.5) for
 many leaky fits (median ε 0.45, τ 0.001; bounded median α 0.14). The unbounded model's τ is at its upper limit (100)
 for 35 of 39 (`parameters_at_a_limit` in `e3_model_comparison_converged.json`). With wider limits the likelihood keeps rising toward ε → 0.5 and
 τ → 0: each piece of feedback carries almost no evidence, and choices are very sharp. The model ranking is

@@ -86,7 +86,7 @@ it (at most 5% of guesses, OLMo). Two-color guesses are more common than in peop
 
 **Capability** (`capability` in `b1_summary.json`; descriptive). Among the models that pass the solve-rate rule,
 the signature effect falls as query quality rises (gpt-oss 0.23, Haiku −0.56, Opus −0.79), and none shows the
-human pattern. The human direction appears only below the rule, in the two models that solve some games (Qwen3-32B,
+human pattern. A human-sized effect appears only below the rule, in the two models that solve some games (Qwen3-32B,
 whose query quality is closest to people's, 0.686 vs. 0.652, and Phi-4), and not in OLMo-2-32B, which almost
 never solves. This is the pattern the plan predicted (human-like at intermediate capability, none for models that
 mostly guess or that approach the ideal player), but it rests on point estimates from models outside the rule, so it
@@ -139,8 +139,8 @@ Paper's procedure:
   for 191 and 154 of their 211 bounded fits (pooled, blocks and resamples; Opus 32 of 211, not the pooled fit;
   `evaluation_cap_reached` in `b1b_<model>_T0.json`). Opus is fitted best by the bounded model under both procedures.
 - **Cache seed** (the Study A check; `b1b_<model>_T0_cache_seed_converged.json`). With the bounded model refitted on
-  the independently rebuilt cache, it stays best for all three models. For gpt-oss and Haiku nothing changes (0.181
-  and 0.363 per decision against unbounded, 0.062 and 0.028 against leaky). For Opus its advantage shrinks to 0.032
+  the independently rebuilt cache, it stays best for all three models. For gpt-oss and Haiku the best model and the conclusions
+  do not change (0.181 and 0.363 per decision against unbounded, 0.062 and 0.028 against leaky). For Opus its advantage shrinks to 0.032
   against unbounded and 0.020 against leaky (from 0.160 and 0.148; bounded log likelihood −1,313.7 instead of
   −1,290.0, α 0.0087 instead of 0.0226): Opus's cache-1 optimum is a narrow peak in α (resample interval 0.0223 to
   0.0229) that the replicate cache does not have, so its margin depends on the cache. People refitted with the same
@@ -149,7 +149,7 @@ Paper's procedure:
 - **Per-decision ΔAIC includes the AIC penalty**, which per decision is smaller for a model (369–455 decisions) than
   for a person (median 67). Without it (twice the log-likelihood difference per decision) the percentiles change
   little: Haiku 0.026 instead of 0.051 against unbounded and 0.154 instead of 0.179 against leaky, Opus 0.308 instead
-  of 0.385 against leaky, the rest unchanged (`percentile_2dLL_per_decision`).
+  of 0.385 against leaky, the rest of the converged fits unchanged (`percentile_2dLL_per_decision`).
 - **Parameters.** For gpt-oss and Haiku the converged leaky and bounded fits sit at the limits (ε 0.5, τ 0.001,
   λ 1000): the weak-evidence ridge found for many people in Study A. Opus's fit is interior (ε 0.021, α 0.023,
   λ 4.15, τ 0.13). α lies at percentile 0.205–0.231 of people's; its interval is very narrow for Opus (a narrow peak
@@ -173,7 +173,7 @@ and 0.776). Identification (naming a still-possible code): 0.24.
 - By number of clues (1 / 2 / 3): false exclusion 0.323 / 0.576 / 0.510, near-miss retention 0.125 / 0.235 / 0.342.
 - By complexity of the clue's query on single-clue probes (1 / 2 / 3 / 4 distinct digits): false exclusion 0.25 /
   0.30 / 0.34 / 0.37, near-miss retention 0.00 / 0.11 / 0.14 / 0.10 (only 96 judgments with one digit). False
-  exclusions grow with clue count and complexity; false retentions grow with count but hardly with complexity, the
+  exclusions are higher after two or three clues than after one and grow with complexity; false retentions grow with count but hardly with complexity, the
   reverse of the conservative human account (M2c), whose errors are false retentions that grow with complexity.
 - Clue age: near misses are ruled out only by the newest clue, far misses by an earlier one; far misses are kept less
   often (0.134 vs. 0.245), so the older clues are not the ones ignored (far misses can also break several clues).
@@ -183,7 +183,7 @@ clues by multiplying per-clue checks, which predicts false exclusions rising wit
 prespecified alternatives (one global check: the minimum or the k-th root of the per-clue checks), it fits far
 better for M1 and M2s on the calibration families (AIC lower by 460–521) and the held-out families (log likelihood
 higher by 352–389). It predicts false exclusions of 0.24 / 0.39 / 0.51 for 1 / 2 / 3 clues (observed 0.32 / 0.58 /
-0.51), where the alternatives predict about 0.25 throughout. The planned observation model is kept.
+0.51), where the alternatives predict 0.25–0.29. The planned observation model is kept.
 
 **Planned comparison** (`process_fits/qwen3-32b_T0.json`, `qwen3-32b_T0_intervals.json`):
 
@@ -200,7 +200,7 @@ M3 uses the corrected likelihood (`M3_corrected`; Departures, item 9).
 - **Noisy evidence use beats reporting noise alone:** M2s minus M0 on held-out families 429 [333, 515]
   (family bootstrap, 80 families, 69 favor M2s); ΔAIC of M0 over M2s 573 on the calibration families, 95% interval
   [403, 763] across 1,000 resamples of them. Forgetting (M3) improves on M0 but stays far behind: M2s minus M3 on
-  held-out families 337 [219, 443] (62 of 80), ΔAIC 433 [211, 652]; M3 is never best in a resample.
+  held-out families 337 [219, 443] (62 of 80), ΔAIC 421 [211, 652]; M3 is never best in a resample.
 - **The noisy-evidence models are close.** M2s minus M1 on held-out families 4.5 [−1.2, 10.9] (40 of 80 families
   favor M2s); ΔAIC M1 − M2s 16.1 [−4.8, 41.3]; M2s has the lowest AIC in 92% of resamples, M1 in 6%, M2c in 2%. At
   Qwen3's fitted values, none of 50 data sets generated by M1 (or M0, M2c, M3) gives M2s an AIC edge as large as the
@@ -221,7 +221,7 @@ M3 uses the corrected likelihood (`M3_corrected`; Departures, item 9).
   data generated by M2c come back as M1 (M2c 0.12): at these values M2c is M1.
 
 Reading (as planned): the human account (M2c) does not transfer. Qwen3's evidence use is noisy, with errors in both
-directions that grow with the number of clues; among the planned models the symmetric approximation (M2s) fits best,
+directions that are more frequent after several clues than after one; among the planned models the symmetric approximation (M2s) fits best,
 a comparative boundary of the human account, but its edge over plain noise does not carry over reliably to held-out
 families.
 
@@ -313,15 +313,21 @@ two error rates: ν_x for ruling out a code the clue allows and ν_r for keeping
     hardware) are under `serving` in `configs/model_registry.json`.
 13. **Qwen3-32B's B1 games were rerun.** The language-model client first timed out at 600 s and retried
     silently. A timeout aborts the request on the server, so on a busy node long replies were redrawn until a
-    short one finished. An audit of every cached reply found it only in Qwen3-32B's game play. Cached replies that took over 600 s
-    in total, the mark of a redraw: 72 in Experiment 1 under T0, 15 in free play and 1,417 in the aid arm. All three sets were set aside and replayed
+    short one finished. An audit of every cached reply found it only in Qwen3-32B's game play and in a first Study C cap pilot, which
+    was discarded. Cached replies that took over 600 s in total, the mark of a redraw: 72 in Experiment 1 under T0,
+    15 in free play and 1,417 in the aid arm (`b1/qwen3-32b_rerun_audit.json`). All three sets were set aside and replayed
     from scratch with the corrected client, which waits up to 4 hours and never retries. Same positions, secrets
     and settings; no reply was reused. Every Qwen3 B1 number above comes from the rerun.
 
     No other model's records changed. Regenerating `b1_summary.json` leaves every non-Qwen3 entry identical,
     including every interval and test. Qwen3's free-play solve rate (0.44, first run 0.41) stays below the
     solve-rate rule. The descriptive changes are small under T0. In the aid arm, the first run had understated how
-    often aided replies run out of room: re-asks rose from 3.1–5.5% to 9.0–14.5% of turns, invalid turns from 6 to 54.
+    often aided replies run out of room: re-asks rose from 3.1–5.5% to 9.0–14.5% of turns, invalid turns from 6 to 54,
+    and the aid arm's Max-EIG minus Simple fell from 2.15 to 1.54.
+14. **Preference for interpretable queries.** The proposal asks whether models prefer interpretable queries, as
+    people do. Every model's free play reports the structure of its queries (colors per guess, first guesses; the
+    free-play table). The Experiment 2-style choice between a simpler and a more informative query was run only
+    for the depth model, Qwen3-32B (Native question choice).
 
 Bootstrap resamples that ran past their time limit on the cluster were rerun with the same seeds; every summary
 uses all of its resamples (200 refits per B1b fit, 1,000 refits for the B3 calibration bootstrap).

@@ -1,12 +1,14 @@
 # Study C: capacity manipulation (Qwen3-32B)
 
-Every number below is read from the JSON file named in its section. `bash experiments/reproduce_summaries.sh`
+Every number below is read from the file named in its section: the JSON summaries and, for counts of replies, the
+JSONL records. `bash experiments/reproduce_summaries.sh`
 regenerates the summaries from the saved records and fits. The scripts are listed in `experiments/study_c/README.md`.
 
 The confirmation test (C-c and C-b) was preregistered. The analysis plan and the prediction lock
 (`prereg/analysis_plan.md`, `prereg/prediction_lock.json`, SHA-256 `582604d8…b0406`) were committed and registered
-on OSF before any confirmation data were collected. `prediction_test.py score` checked all 14 locked hashes
-before scoring.
+on OSF before any confirmation data were collected. `prediction_test.py score` checks the six locked code
+hashes before scoring. All 14 locked hashes (code, families, pairs, calibration, plan, prompts and model registry)
+were also checked against the files before scoring, and all matched.
 
 Conditions (frozen templates in `configs/prompt_freeze_v1.json`). Every condition may reason, and every reply is
 capped at 6,144 tokens.
@@ -48,12 +50,12 @@ capped at 6,144 tokens.
 
 | Measure | T0 | T1 | T2 | T3 | T3 − T0 | T3 − T1 |
 |---|---|---|---|---|---|---|
-| False exclusion, multi-clue | 0.569 | 0.542 | 0.576 | 0.604 | +0.035 [−0.014, 0.083] | +0.062 [0.018, 0.107] |
+| False exclusion, multi-clue | 0.569 | 0.542 | 0.576 | 0.604 | +0.035 [−0.014, 0.083] | +0.062 [0.017, 0.107] |
 | False exclusion, single clue | 0.323 | 0.329 | 0.321 | 0.330 | +0.007 [−0.019, 0.034] | +0.001 [−0.027, 0.030] |
 | False retention, near miss, multi-clue | 0.245 | 0.235 | 0.182 | 0.245 | −0.000 [−0.036, 0.037] | +0.010 [−0.023, 0.044] |
-| False retention, far miss, multi-clue | 0.134 | 0.139 | 0.082 | 0.138 | +0.004 [−0.021, 0.027] | −0.001 [−0.027, 0.026] |
+| False retention, far miss, multi-clue | 0.134 | 0.139 | 0.082 | 0.138 | +0.004 [−0.021, 0.027] | −0.000 [−0.027, 0.026] |
 | False retention, near miss, single clue | 0.125 | 0.133 | 0.107 | 0.184 | +0.058 [0.041, 0.077] | +0.051 [0.033, 0.069] |
-| Identification (finished replies) | 0.238 | 0.230 | 0.309 | 0.338 | +0.099 [0.048, 0.150] | +0.108 [0.055, 0.162] |
+| Identification (finished replies) | 0.238 | 0.230 | 0.309 | 0.338 | +0.099 [0.048, 0.150] | +0.108 [0.055, 0.161] |
 | Identification replies unfinished | 0.048 | 0.052 | 0.082 | 0.186 | +0.138 [0.098, 0.177] | +0.134 [0.098, 0.171] |
 
 - **Clue checking does not improve.** No error rate falls under the aid. Near misses on single clues are kept
@@ -79,19 +81,20 @@ family resamples, with the same family draws in every condition.
 
 | Parameter | T0 | T1 | T2 | T3 | T3 − T0 | T3 − T1 |
 |---|---|---|---|---|---|---|
-| M2s ν (noisy evidence use) | 0.416 | 0.441 | 0.459 | 0.517 | +0.101 [0.035, 0.167] | +0.076 [0.009, 0.157] |
+| M2s ν (noisy evidence use) | 0.416 | 0.441 | 0.458 | 0.516 | +0.101 [0.035, 0.167] | +0.076 [0.008, 0.157] |
 | M2s ζ (reporting noise) | 0.111 | 0.099 | 0.025 | 0.047 | −0.064 [−0.160, 0.033] | −0.052 [−0.153, 0.045] |
 | M1 ν | 0.424 | 0.446 | 0.465 | 0.525 | +0.100 [0.036, 0.163] | +0.078 [0.020, 0.131] |
-| M1a ν_x (rules out a possible code) | 0.277 | 0.289 | 0.310 | 0.312 | +0.036 [−0.010, 0.080] | +0.024 [−0.021, 0.068] |
-| M1a ν_r (keeps a ruled-out code) | 0.067 | 0.075 | 0.073 | 0.097 | +0.029 [−0.008, 0.065] | +0.022 [−0.009, 0.057] |
+| M1a ν_x (rules out a possible code) | 0.276 | 0.289 | 0.310 | 0.312 | +0.036 [−0.010, 0.080] | +0.024 [−0.021, 0.068] |
+| M1a ν_r (keeps a ruled-out code) | 0.067 | 0.075 | 0.073 | 0.097 | +0.029 [−0.008, 0.064] | +0.022 [−0.009, 0.057] |
 
-- **The aid raises the noise of evidence use.** It raises ν by about 0.10, also against T1 and T2: M2s
-  T3 − T2 +0.058 [0.001, 0.191]. Reporting noise does not change reliably.
+- **The aid raises the noise of evidence use.** It raises ν by 0.10 against the standard prompt, and
+  by 0.08 and 0.06 against the length-matched and generic prompts (M2s T3 − T2 +0.058 [0.001, 0.191]). Reporting noise does not change reliably.
 - **The best model barely changes.** By AIC it is M2s under T0, T2 and T3, and M1 under T1. On held-out families
   it is M2s under T0–T2 and M2c under T3. Under T3, M2c and M1 have the same held-out likelihood to 0.1, because
   α sits at its lower limit (`process_fits/qwen3-32b_T*.json`).
-- **M3 uses the corrected likelihood in every condition.** In T1–T3 this is the stored fit. Refitting M3 with the
-  corrected likelihood reproduced the T1–T3 fits and their 1,000 resamples to within 10⁻¹² in log likelihood.
+- **M3 uses the corrected likelihood in every condition.** In T1–T3 this is the stored fit. A refit of M3 with the
+  corrected likelihood reproduced the stored T1–T3 fits, and the 563 resamples refitted before the check was
+  stopped, to within 10⁻¹² in log likelihood (a check, not saved as a file).
 
 ## Reply cap (`cap_pilot_qwen3-32b_cap15000.json`)
 
@@ -126,7 +129,7 @@ Disclosures).
 - Unfinished usefulness replies: T0 8.2%, T3 24.4% (calibration 9.8%, 25.2%). Every unparsed reply is one that
   reached the cap.
 
-**Measure.** Usefulness U(q) is the probability that the model names a code consistent with q's answer,
+**Measure.** Usefulness U(q) is the probability that the model names the secret after seeing q's answer,
 (1/K) Σ_a P(named code ∈ S_a). The aid's effect on a pair is Γ = [U(q1,T3) − U(q2,T3)] − [U(q1,T0) − U(q2,T0)].
 Pairs are oriented so that the support map predicts Γ ≥ 0.
 
@@ -146,7 +149,8 @@ only if the support map beats all four.
 
 **H3 is not supported.** Positive values would favor the support map; every point estimate favors the rival.
 The secondary predictor (M2s fitted to the T0 and T3 batteries) and the exploratory one (M1a) do not beat any
-rival either (all Holm p = 1).
+rival either: every difference favors the rival (one-sided p 0.89–0.97, unadjusted, as the plan specifies;
+`secondary_vs_rivals` in `cc_score.json`).
 
 **Also reported** (as planned):
 
@@ -160,8 +164,11 @@ rival either (all Holm p = 1).
 | uniform gain | 0.00520 | 0.00184 | −0.0015 | (constant) | (constant) |
 | ideal + noise | 0.00520 | 0.00184 | −0.0015 | −2.36 [−23.3, 19.2] | 0.07 |
 
-- **The models predicted almost no change.** Mean |Γ̂| for the support map is 0.004 in strata (a) and (b) and
-  0.0001 in (c) (`prereg/prediction_lock.json`).
+Calibration-slope intervals come from 2,000 family resamples. The largest quarter of effects is the 98 pairs whose
+|Γ| is at or above its 75th percentile.
+
+- **The models predicted almost no change.** Mean |Γ̂| for the support map is 0.004 in stratum (a), 0.003 in (b)
+  and 0.0001 in (c) (`prereg/prediction_lock.json`).
 - **The aid does change usefulness, unpredictably.** Γ varies beyond sampling noise (true SD about 0.04; design
   check below), but no calibration slope is reliably positive. Sign accuracy on the largest effects is at chance.
   "Ideal + noise", like uniform gain, predicts Γ ≈ 0, so its signs are mostly 0.
@@ -184,7 +191,7 @@ reasoner.
 
 **Test.** The OLS slope of the choice shift (Δ logit P(choose q1), with 0.5 added to the counts) on measured Γ,
 one-sided, with 10,000 family-bootstrap resamples. **Slope −0.63 [−2.50, 1.32], p = 0.75; H4 is not supported.**
-- Spearman correlation: −0.001.
+- Rank correlation: about 0 (−0.001 in the locked script, which breaks ties by order; +0.007 with tie-aware ranks).
 - Split-half reliability of measured Γ: 0.17, or 0.30 after the Spearman–Brown correction. The slope corrected
   for it is −2.13, still negative.
 - Slope on the support map's Γ̂ (secondary): 5.3 [−51.1, 62.5], p = 0.44.
@@ -214,14 +221,14 @@ analysis used, has 0.065 and 0.053; the two differ only by resampling noise.
 **What this changed.**
 - The power analysis assumed a true SD of 0.053 and, at 8 samples, a noise SD of 0.046.
 - With the bias corrected, Γ's true spread is about 0.037 on both sets of families.
-- The fresh families were also noisier per sample: answers are spread more evenly across branches, and the
-  families have slightly fewer codes. That brought the noise SD to 0.062 rather than the 0.054 that the corrected
+- The fresh families were also noisier per sample: per-branch hit rates sit closer to one half (mean
+  p_a(1 − p_a) 0.059 against 0.047), and the families have slightly fewer codes. That brought the noise SD to 0.062 rather than the 0.054 that the corrected
   calibration value projects.
 - Rerunning the planned power simulation at these values gives **power 0.50** for the planned smallest effect
   (a predictor explaining 20% of Γ's true variance), not 0.864.
 - So the confirmation is less sensitive than planned. Even so, all four H3 point estimates favor the rivals, and
   the H4 slope is negative.
-- The noise-corrected MSPE and the reliability numbers above use the locked noise estimate, as the plan fixes.
+- The noise-corrected MSPE above uses the locked noise estimate, as the locked code fixes.
 
 ## Disclosures and departures from the plan
 
@@ -247,3 +254,6 @@ analysis used, has 0.065 and 0.053; the two differ only by resampling noise.
    interval moves from [−3.04, 3.49] to [−3.08, 3.49] and its p from 0.478 to 0.481. The confirmatory output is
    reproduced exactly on every run.
 7. **Design check.** The design check above is post hoc and labeled so. It changes no preregistered result.
+8. **Hash check.** The plan says `score` checks the hashes in the lock; the locked code checks only the six code
+   hashes. The other eight (families, pairs, calibration, plan, prompts, model registry) were checked separately
+   before scoring, and all 14 matched.

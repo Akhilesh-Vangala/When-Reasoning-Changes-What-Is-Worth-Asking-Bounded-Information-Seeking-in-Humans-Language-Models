@@ -29,7 +29,7 @@ prediction lock in `prereg/` were committed and registered on OSF before any con
   model is smaller than reported (mean ΔAIC 27.8 vs. 72.3).
 
 **Study B** (`results/study_b/README.md`)
-- **B1:** people need 1.29 [0.29, 2.28] more guesses after informative but complex histories than after simple ones.
+- **B1:** people need 1.29 [0.29, 2.28] (resampling starting positions) more guesses after informative but complex histories than after simple ones.
   None of the models that solve at least half their games (gpt-oss-120b, Claude Haiku 5.5, Claude Opus 5.5) shows
   this (−0.79 to 0.23); Haiku and Opus are faster after them, like the ideal player. Two weaker models show the
   human direction descriptively.

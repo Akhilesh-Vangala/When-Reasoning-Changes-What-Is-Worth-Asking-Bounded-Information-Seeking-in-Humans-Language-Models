@@ -22,7 +22,7 @@ File and folder suffixes:
 | `study_b/battery/*_T1–T3_*`, `study_b/process_fits/*T1–T3*` | Study C aid conditions: probe-battery records, process-model fits and family-bootstrap resamples |
 | `study_c/` | C-a aid effects (`ca_aid_effects.json`); reply-cap pilot; C-c calibration (`cc_calibration.json`), power analysis (`cc_power.json`) and preregistered score (`cc_score.json`); C-b choice shift on the confirmation pairs (preregistered) and on the calibration pairs (exploratory); post hoc design check (`cc_noise_check.json`) |
 | `primary_tests.json` | Holm correction across the course's primary tests (below) |
-| `figures/` | the five figures for the paper and poster (PDF and PNG), with their captions in `figures/README.md` |
+| `figures/` | the paper's four figures (design; people vs. models; evidence use and the aid; the preregistered tests) and one supplementary figure (Study A), as PDF and PNG. Captions are in `figures/README.md` |
 
 ## Primary tests across studies (`primary_tests.json`)
 
@@ -40,9 +40,9 @@ models or B3's two rivals enter the family. That was fixed here, after the data:
 
 | Test | Estimate [95% CI] | p | Holm p | Result |
 |---|---|---|---|---|
-| B1 gpt-oss-120b: Max-EIG minus Simple (guesses) | +0.23 [−0.24, 0.69] | 0.35 | 0.69 | not significant |
-| B1 Claude Haiku 5.5 | −0.56 [−0.90, −0.21] | 0.0018 | 0.0072 | significant, in the ideal player's direction (faster after Max-EIG), not the human one |
-| B1 Claude Opus 5.5 | −0.79 [−1.07, −0.50] | 5 × 10⁻⁸ | 2 × 10⁻⁷ | significant, in the ideal player's direction |
+| B1 gpt-oss-120b: Max-EIG minus Simple (guesses; mixed model) | +0.225 [−0.24, 0.69] | 0.35 | 0.69 | not significant |
+| B1 Claude Haiku 5.5 | −0.556 [−0.90, −0.21] | 0.0018 | 0.0072 | significant, in the ideal player's direction (faster after Max-EIG), not the human one |
+| B1 Claude Opus 5.5 | −0.785 [−1.07, −0.50] | 5 × 10⁻⁸ | 2 × 10⁻⁷ | significant, in the ideal player's direction |
 | B3: M2s minus M1 in held-out log likelihood (the binding rival; M2s minus M0 is 429 [333, 515], p < 0.001) | +4.5 [−1.2, 10.9] | 0.072 | 0.21 | not significant |
 | H4: slope of the choice shift on measured Γ | −0.63 [−2.50, 1.32] | 0.75 | 0.75 | not significant |
 
