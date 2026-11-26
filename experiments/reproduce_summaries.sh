@@ -55,6 +55,7 @@ run experiments/study_c/choice_shift.py --split support_calibration choice_calib
 run experiments/study_c/prediction_test.py score
 run experiments/study_c/choice_shift.py --split c_confirmation
 run experiments/study_c/noise_check.py
+run experiments/study_c/informative_nulls.py   # post hoc: equivalence, Bayes factors, design diagnosis
 run experiments/primary_tests.py
 # Figures for the paper and poster (results/figures/)
 run experiments/make_figures.py

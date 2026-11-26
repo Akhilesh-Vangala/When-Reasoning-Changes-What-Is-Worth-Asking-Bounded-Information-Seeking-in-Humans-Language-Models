@@ -1,0 +1,219 @@
+{
+  "status": "post hoc, not preregistered; the confirmatory results are cc_score.json and cb_choice_shift_c_confirmation.json",
+  "pairs": 360,
+  "families": 120,
+  "signal": {
+    "observed_sd": 0.0721,
+    "noise_sd": 0.062,
+    "true_sd": 0.0368,
+    "true_variance": 0.00136,
+    "true_variance_ci95": [
+      0.000155,
+      0.0028
+    ],
+    "p_true_variance_le_0": 0.0107,
+    "reliability_of_gamma": 0.261,
+    "planned_true_sd": 0.0532,
+    "note": "the aid's effect on usefulness varies across pairs beyond sampling noise, but less than planned"
+  },
+  "h3": {
+    "sesoi_mspe_gain": {
+      "planned": 0.000565,
+      "measured": 0.000271
+    },
+    "sesoi_definition": "0.2 * tau^2: the gain of a predictor explaining 20% of the true variance of Gamma (the plan's power target)",
+    "primary_vs_rivals": {
+      "difficulty_regression": {
+        "mspe_gain": -5.94e-05,
+        "ci90": [
+          -0.000151,
+          2.65e-05
+        ],
+        "bootstrap_se": 5.38e-05,
+        "equivalence": {
+          "planned": {
+            "upper95_below_sesoi": true,
+            "p_equivalence": 0.0001
+          },
+          "measured": {
+            "upper95_below_sesoi": true,
+            "p_equivalence": 0.0001
+          }
+        },
+        "bf01": {
+          "planned_sesoi_x0.5": 10.7,
+          "planned_sesoi_x1": 21.3,
+          "planned_sesoi_x2": 42.5,
+          "measured_sesoi_x0.5": 5.27,
+          "measured_sesoi_x1": 10.3,
+          "measured_sesoi_x2": 20.4
+        }
+      },
+      "reporting_only": {
+        "mspe_gain": -1.55e-05,
+        "ci90": [
+          -3.79e-05,
+          6.12e-06
+        ],
+        "bootstrap_se": 1.33e-05,
+        "equivalence": {
+          "planned": {
+            "upper95_below_sesoi": true,
+            "p_equivalence": 0.0001
+          },
+          "measured": {
+            "upper95_below_sesoi": true,
+            "p_equivalence": 0.0001
+          }
+        },
+        "bf01": {
+          "planned_sesoi_x0.5": 44.0,
+          "planned_sesoi_x1": 87.9,
+          "planned_sesoi_x2": 176.0,
+          "measured_sesoi_x0.5": 21.2,
+          "measured_sesoi_x1": 42.2,
+          "measured_sesoi_x2": 84.4
+        }
+      },
+      "uniform_gain": {
+        "mspe_gain": -4.29e-05,
+        "ci90": [
+          -0.000115,
+          2.42e-05
+        ],
+        "bootstrap_se": 4.22e-05,
+        "equivalence": {
+          "planned": {
+            "upper95_below_sesoi": true,
+            "p_equivalence": 0.0001
+          },
+          "measured": {
+            "upper95_below_sesoi": true,
+            "p_equivalence": 0.0001
+          }
+        },
+        "bf01": {
+          "planned_sesoi_x0.5": 13.0,
+          "planned_sesoi_x1": 25.9,
+          "planned_sesoi_x2": 51.7,
+          "measured_sesoi_x0.5": 6.34,
+          "measured_sesoi_x1": 12.5,
+          "measured_sesoi_x2": 24.8
+        }
+      },
+      "ideal_noise": {
+        "mspe_gain": -4.23e-05,
+        "ci90": [
+          -0.000115,
+          2.56e-05
+        ],
+        "bootstrap_se": 4.25e-05,
+        "equivalence": {
+          "planned": {
+            "upper95_below_sesoi": true,
+            "p_equivalence": 0.0001
+          },
+          "measured": {
+            "upper95_below_sesoi": true,
+            "p_equivalence": 0.0001
+          }
+        },
+        "bf01": {
+          "planned_sesoi_x0.5": 12.7,
+          "planned_sesoi_x1": 25.4,
+          "planned_sesoi_x2": 50.7,
+          "measured_sesoi_x0.5": 6.22,
+          "measured_sesoi_x1": 12.2,
+          "measured_sesoi_x2": 24.4
+        }
+      }
+    },
+    "correlation_with_observed_gamma": {
+      "support_map": {
+        "pearson_r": -0.102,
+        "ci95": [
+          -0.241,
+          0.0573
+        ],
+        "prediction_sd": 0.00256
+      },
+      "fitted_M2s": {
+        "pearson_r": -0.11,
+        "ci95": [
+          -0.25,
+          0.0426
+        ],
+        "prediction_sd": 0.00338
+      },
+      "fitted_M1a": {
+        "pearson_r": -0.0525,
+        "ci95": [
+          -0.161,
+          0.0726
+        ],
+        "prediction_sd": 0.0103
+      },
+      "difficulty_regression": {
+        "pearson_r": 0.0772,
+        "ci95": [
+          -0.035,
+          0.188
+        ],
+        "prediction_sd": 0.00182
+      },
+      "reporting_only": {
+        "pearson_r": -0.106,
+        "ci95": [
+          -0.251,
+          0.0555
+        ],
+        "prediction_sd": 0.00174
+      },
+      "uniform_gain": {
+        "pearson_r": null,
+        "note": "constant prediction"
+      },
+      "ideal_noise": {
+        "pearson_r": -0.0104,
+        "ci95": [
+          -0.105,
+          0.0915
+        ],
+        "prediction_sd": 0.000319
+      }
+    },
+    "correlation_expected_for_sesoi_predictor": 0.229
+  },
+  "design_diagnosis": {
+    "locked_primary_prediction_sd": 0.00256,
+    "true_sd_of_gamma": 0.0368,
+    "ratio_true_to_predicted_sd": 14.4,
+    "max_expected_gain_if_exactly_right": 1.34e-05,
+    "as_share_of_true_variance": 0.00991,
+    "sesoi_measured": 0.000271,
+    "power_if_exactly_right_vs_uniform_gain": 0.038,
+    "power_method": "2000 simulations, family-level one-sided z test at alpha 0.0125 (normal approximation to the locked bootstrap test)",
+    "planned_power": 0.864,
+    "note": "the planned power is for a predictor whose spread matches a 20% share of tau^2; the locked predictor's spread is far smaller, so even a perfectly correct support_map could not have beaten Gamma = 0"
+  },
+  "h4": {
+    "pairs": 360,
+    "pearson_r_shift_vs_measured_gamma": -0.0351,
+    "ci95": [
+      -0.139,
+      0.0709
+    ],
+    "reliability": {
+      "measured_gamma": 0.261,
+      "choice_shift_split_half_spearman_brown": 0.326
+    },
+    "max_observable_r_if_true_r_is_1": 0.292,
+    "disattenuated_upper95": 0.243,
+    "bf01_positive_correlation": {
+      "prior_scale_z_0.1": 3.23,
+      "prior_scale_z_0.2": 6.1,
+      "prior_scale_z_0.3": 9.05
+    },
+    "note": "observed-scale correlation; the disattenuated bound is how large the true correlation could be given the low reliability of both measures"
+  }
+}

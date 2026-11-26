@@ -37,6 +37,12 @@ capped at 6,144 tokens.
   - Γ was noisier, and its true spread smaller, than the power analysis assumed.
   - At the planned smallest effect the realized design had power of about 0.50, not 0.864.
   - The H3 point estimates favor the rivals, so the null is not a near miss.
+- **How informative the nulls are (post hoc).**
+  - The locked H3 test could not have detected a correct support map. Its predictions spread about 14 times less
+    than Γ does, so its power against Γ = 0 was about 0.04 even if exactly right.
+  - The scale-free check is informative. The support map correlates with observed Γ at −0.10 [−0.24, 0.06],
+    excluding the +0.23 that a predictor at the smallest effect of interest would show.
+  - H4: r = −0.04 [−0.14, 0.07]; BF01 = 3–9.
 
 ## C-a: how the aid changes evidence use (`ca_aid_effects.json`)
 
@@ -229,6 +235,90 @@ analysis used, has 0.065 and 0.053; the two differ only by resampling noise.
 - So the confirmation is less sensitive than planned. Even so, all four H3 point estimates favor the rivals, and
   the H4 slope is negative.
 - The noise-corrected MSPE above uses the locked noise estimate, as the locked code fixes.
+
+## How informative are the nulls? (post hoc; `cc_informative_nulls.json`; not part of the locked analysis)
+
+Script: `experiments/study_c/informative_nulls.py`.
+- It reads the locked predictions and the confirmation records through the locked functions (`records`, `group`,
+  `observed_gamma`).
+- It reuses the preregistered score's 10,000 family resamples (seed 0) and reproduces its H3 intervals exactly.
+- Noise uses the corrected (unbiased) estimator of the design check.
+- Nothing here changes a preregistered result.
+
+**1. The aid's effect varies, but less than planned.**
+- True variance of Γ: 0.00136 [0.00016, 0.0028]. That is a true SD of 0.037 against a planned 0.053;
+  P(true variance ≤ 0) = 0.011.
+- Reliability of Γ (true over observed variance): 0.26. This is a variance-based estimate. It differs from the
+  split-half figure in C-b (0.30 after Spearman–Brown), which uses half the samples per half.
+
+**2. The locked H3 test could not have detected a correct primary predictor.** This is a design flaw that was
+visible in `prediction_lock.json` at lock time. It was not disclosed before this analysis.
+
+| | Value |
+|---|---|
+| SD of the locked support-map predictions Γ̂ | 0.0026 |
+| True SD of Γ | 0.037 (14 times larger) |
+| Largest expected MSPE gain over Γ = 0 if Γ̂ were exactly right, mean(Γ̂²) | 1.3 × 10⁻⁵ (1% of the true variance) |
+| Smallest effect of interest (SESOI): gain of a predictor explaining 20% of the true variance | 2.7 × 10⁻⁴ (measured τ²); 5.7 × 10⁻⁴ (planned τ²) |
+| Power of the locked test against Γ = 0 if the support map were exactly right (2,000 simulations) | **0.04** |
+| Planned power | 0.864 |
+
+- **Why the planned power doesn't apply.** The planned power is for a hypothetical predictor whose spread matches a
+  20% share of the true variance. The locked support map predicts changes about 14 times too small.
+- **Why the gain-based tests below mostly hold by construction.** Its MSPE gain over the rivals cannot reach the SESOI
+  whether or not its direction is right. So the MSPE-based equivalence tests and Bayes factors below largely restate
+  that, and are not independent evidence.
+- **The scale-free correlation is the informative check.** A correlation does not depend on the spread of the
+  predictions.
+
+**3. H3, scale-free: the support map's direction is not right either.**
+- A predictor explaining 20% of Γ's true variance would correlate with observed Γ at about +0.23, given Γ's
+  reliability of 0.26.
+- The locked support map correlates at **−0.10 [−0.24, 0.06]**. The upper bound excludes +0.23.
+
+| Predictor | r with observed Γ [95% CI] | SD of predictions |
+|---|---|---|
+| support_map (primary) | −0.10 [−0.24, 0.06] | 0.0026 |
+| fitted_M2s | −0.11 [−0.25, 0.04] | 0.0034 |
+| fitted_M1a | −0.05 [−0.16, 0.07] | 0.0103 |
+| difficulty_regression | +0.08 [−0.04, 0.19] | 0.0018 |
+| reporting_only | −0.11 [−0.25, 0.06] | 0.0017 |
+| ideal_noise | −0.01 [−0.11, 0.09] | 0.0003 |
+
+No predictor's interval reaches +0.23.
+
+**4. H3 on the planned scale (equivalence and Bayes factors).** Read these with point 2 in mind.
+
+| Rival | MSPE gain of support map [90% CI] | Below the SESOI? | BF01, prior scale = SESOI (measured / planned τ²) |
+|---|---|---|---|
+| difficulty_regression | −5.9e-5 [−1.5e-4, 2.7e-5] | yes (p < 0.001) | 10 / 21 |
+| reporting_only | −1.6e-5 [−3.8e-5, 6.1e-6] | yes (p < 0.001) | 42 / 88 |
+| uniform_gain | −4.3e-5 [−1.2e-4, 2.4e-5] | yes (p < 0.001) | 13 / 26 |
+| ideal_noise | −4.2e-5 [−1.2e-4, 2.6e-5] | yes (p < 0.001) | 12 / 25 |
+
+- The upper 95% bound of every gain is below the SESOI.
+- BF01 uses a half-normal prior on the gain with the bootstrap SE as a normal approximation. It is 5–176 across
+  prior scales of 0.5–2 × SESOI.
+
+**5. H4: no sign that choices follow the aid's effect, but the test is weak.**
+- **Correlation.** The correlation between the choice shift and measured Γ is **−0.04 [−0.14, 0.07]** (360 pairs).
+- **Low reliability.**
+  - Measured Γ: 0.26.
+  - Choice shift (split halves, Spearman–Brown): 0.33.
+  - So even a perfect true relation would appear as r ≤ 0.29.
+- **Disattenuated bound.** Corrected for both reliabilities, the upper 95% bound of the true correlation is 0.24.
+  That rules out a strong link, not a modest one.
+- **Bayes factor.** BF01 for a positive correlation (Fisher z, half-normal prior) is 3.2, 6.1 and 9.1 at prior
+  scales 0.1, 0.2 and 0.3. That is moderate evidence for no positive relation.
+
+**How to report it.**
+- **H3** is a preregistered null whose primary test lacked sensitivity by design. The scale-free check is the
+  substantive result: the fitted process model, and every rival, fails to anticipate even the direction of the
+  aid's item-level effect on usefulness.
+- **H4** is a null with moderate evidence against a strong link. Both measures are too unreliable to exclude a modest
+  one.
+- **A follow-up** needs predictors whose spread matches the effect (or a scale-free endpoint), easier states that
+  lift usefulness off the floor, and an aid that changes capacity (for example a candidate-set tool).
 
 ## Disclosures and departures from the plan
 
