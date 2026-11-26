@@ -100,6 +100,87 @@ and needs more guesses (11.64 vs. 10.50, 13.18 vs. 12.37, 13.65 vs. 13.05); Max-
 The aided replies are longer and more often reach the reply cap before naming a guess: re-asks on 9.0–14.5% of
 turns (T0: 4.5–7.3%) and 54 invalid turns of 15,734 (T0: 7 of 14,710).
 
+## B1 re-analysis, post hoc: every model against the ideal player (`b1_reanalysis.json`)
+
+**Status:** post hoc, not preregistered. It uses the same saved B1 records and changes no existing number: the raw
+column reproduces `b1_summary.json` for all six models.
+
+**Why it was added.**
+- The contrast above (Max-EIG minus Simple tested against 0) treats 0 as "no human signature". But the ideal player
+  is itself 0.59 guesses faster after Max-EIG histories, which leave fewer codes. A raw difference of 0 is therefore
+  already a shift from the ideal player toward people.
+- The paper's own Experiment 1 analysis controls for initial uncertainty.
+- The solve-rate rule was set after the solve rates were seen. It removes the least capable models, and capability
+  is what moves play toward the ideal player, so here every model gets intervals and the rule is a sensitivity
+  check, not a filter.
+
+**Measures.** Script: `experiments/study_b/b1_reanalysis.py`.
+- **Excess guesses**: guesses after the supplied history (unsolved = 16) minus the ideal player's guesses on the same
+  stimulus.
+- **Signature effect relative to the ideal player**: Max-EIG minus Simple on excess guesses. This is the primary
+  quantity of the re-analysis. 95% CI from 20,000 resamples of stimuli within condition.
+- **Controlled**: OLS with ln(codes remaining) and the number of supplied guesses, SEs clustered by stimulus.
+- **Hazard**: the censoring-aware hazard model, now with ln(codes remaining).
+- **Minus people** and **share of the human effect**: bootstrap paired by stimulus. People and models played the same
+  56 Simple and 57 Max-EIG stimuli, so stimuli are resampled jointly.
+
+Sign: positive is the human direction (slower after informative but complex histories). The paper reports Simple
+minus Max-EIG, the same effect with the opposite sign (B = −2.29).
+
+| | Free-play EIG rel. to best | Raw (as above) | Relative to ideal [95% CI] | Relative to ideal, controlled | Hazard log odds, controlled | Minus people (paired) | Share of human effect |
+|---|---|---|---|---|---|---|---|
+| People | 0.652 | 1.29 | **1.88 [0.95, 2.79]** | 2.49 [1.31, 3.67] | −0.73 (p < 0.001) | | 1 |
+| Phi-4 | 0.478 | 1.94 | **2.53 [1.40, 3.68]** | 3.93 [2.23, 5.63] | −1.06 (p < 0.001) | +0.65 [−0.61, 1.90] | 1.34 [0.73, 2.59] |
+| OLMo-2-32B | 0.585 | 0.02 | **0.61 [0.12, 1.10]** | 0.43 [−0.22, 1.08] | −0.32 (p = 0.4) | −1.27 [−2.16, −0.36] | 0.32 [0.07, 0.68] |
+| Qwen3-32B | 0.686 | 1.86 | **2.45 [1.22, 3.64]** | 3.58 [1.76, 5.40] | −0.72 (p < 0.001) | +0.57 [−0.79, 1.91] | 1.30 [0.64, 2.63] |
+| gpt-oss-120b | 0.848 | 0.23 | **0.81 [0.41, 1.23]** | 1.18 [0.65, 1.72] | −0.62 (p < 0.001) | −1.07 [−1.92, −0.18] | 0.43 [0.23, 0.83] |
+| Claude Haiku 5.5 | 0.904 | −0.56 | **0.03 [−0.23, 0.30]** | 0.23 [−0.16, 0.63] | −0.09 (p = 0.5) | −1.85 [−2.76, −0.90] | 0.02 [−0.15, 0.17] |
+| Claude Opus 5.5 | 0.942 | −0.79 | **−0.20 [−0.37, −0.03]** | 0.09 [−0.18, 0.36] | +0.82 (p < 0.001) | −2.08 [−2.98, −1.14] | −0.11 [−0.27, −0.01] |
+| Ideal player | 1 | −0.59 | 0 | | | | 0 |
+
+People's free-play EIG is from `b1_summary.json` → `capability.people`. Models are ordered by free-play query
+quality.
+
+**Holm across the six models** (two-sided bootstrap p, relative to ideal, α = 0.05):
+
+| Model | Holm p | Result |
+|---|---|---|
+| Phi-4 | 0.0006 | significant, human direction |
+| gpt-oss-120b | 0.0006 | significant, human direction |
+| Qwen3-32B | 0.0008 | significant, human direction |
+| OLMo-2-32B | 0.048 | significant, human direction |
+| Claude Opus 5.5 | 0.048 | significant, opposite direction (faster than the ideal player after Max-EIG) |
+| Claude Haiku 5.5 | 0.82 | not significant |
+
+Restricted to the three models that pass the solve-rate rule, gpt-oss-120b (0.0003) and Opus (0.047) stay
+significant and Haiku does not.
+
+**Reading.**
+- **The human signature fades with capability; it is not simply absent.**
+  - Phi-4 and Qwen3-32B show the human effect at full size. Neither differs from people (shares 1.34 and 1.30).
+    Their free-play query quality (0.48 and 0.69) brackets people's (0.65).
+  - gpt-oss-120b shows about 40% of it (0.43 [0.23, 0.83]).
+  - Haiku plays like the ideal player, and Opus slightly beats it.
+  - Across the six models, Spearman ρ between query quality and the effect is −0.83. With six models this is
+    descriptive only.
+  - OLMo-2-32B is the exception to the ordering: it almost never solves (free play 0.03) and shows a small effect
+    (0.61) despite low query quality.
+- **This revises the reading of the B1 table above.**
+  - The statement "no eligible model shows the human signature" holds for the raw contrast.
+  - Relative to the ideal player, gpt-oss-120b does show it.
+  - The models excluded by the solve-rate rule show it most strongly.
+- **Caveats.**
+  - **Unsolved games.** For the weakest models many games are unsolved and counted as 16. The hazard model, which
+    censors them, agrees in direction for Phi-4, Qwen3 and gpt-oss.
+  - **Opus depends on the specification.** It is −0.20 [−0.37, −0.03] relative to the ideal player, but 0.09
+    [−0.18, 0.36] when ln(codes remaining) is also controlled. The ideal-relative contrast already adjusts for what
+    each history leaves, so the controlled column partly adjusts twice and is a sensitivity check.
+  - **Not interpretability alone.** The two conditions supply the same number of clues (1–3 guesses, balanced), so the
+    effect is not more clues to combine. But it could still be difficulty in combining complex clues rather than a
+    preference for interpretable ones. B1b and B2/B3 bear on that.
+  - **Reasoning is confounded with model.** Capability here is confounded with model family and reasoning mode. A
+    within-model reasoning manipulation is the clean test.
+
 ## B1b: the human models fitted to model free play (`b1b_<model>_T0[_converged].json`)
 
 The three Study A models are fitted once to each eligible model's solved free-play games (one agent; each person's

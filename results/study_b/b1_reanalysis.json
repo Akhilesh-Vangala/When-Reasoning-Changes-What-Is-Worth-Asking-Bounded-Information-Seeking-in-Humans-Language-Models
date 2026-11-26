@@ -1,0 +1,515 @@
+{
+  "status": "post hoc re-analysis of the saved B1 records; not preregistered",
+  "measure": "guesses after the supplied history (unsolved = 16); excess = guesses minus the ideal player's",
+  "sign": "Max-EIG minus Simple; positive = slower after informative but complex histories (the human direction). The paper reports Simple minus Max-EIG (B = -2.29), the same effect with the opposite sign.",
+  "stimuli": {
+    "Simple": 56,
+    "Max-EIG": 57
+  },
+  "agents": {
+    "humans": {
+      "games": 286,
+      "solve_rate": 0.941,
+      "raw": {
+        "estimate": 1.293,
+        "ci95_boot": [
+          0.28,
+          2.28
+        ],
+        "ols_controlled": {
+          "estimate": 2.411,
+          "ci95": [
+            1.21,
+            3.61
+          ],
+          "p": 8.196951772775748e-05
+        }
+      },
+      "vs_ideal": {
+        "estimate": 1.879,
+        "ci95_boot": [
+          0.95,
+          2.79
+        ],
+        "p_boot": 0.0004999750012499375,
+        "ols_controlled": {
+          "estimate": 2.488,
+          "ci95": [
+            1.31,
+            3.67
+          ],
+          "p": 3.601426568619696e-05
+        }
+      },
+      "hazard": {
+        "log_odds_maxeig": -0.73,
+        "ci95": [
+          -1.05,
+          -0.41
+        ],
+        "p": 8.4219871725082e-06,
+        "note": "controls ln(codes remaining); negative = slower to solve after Max-EIG (human direction)"
+      }
+    },
+    "ideal": {
+      "games": 113,
+      "solve_rate": 1.0,
+      "raw": {
+        "estimate": -0.587,
+        "ci95_boot": [
+          -0.85,
+          -0.32
+        ]
+      }
+    },
+    "qwen3-32b": {
+      "games": 1130,
+      "solve_rate": 0.488,
+      "raw": {
+        "estimate": 1.865,
+        "ci95_boot": [
+          0.58,
+          3.11
+        ],
+        "ols_controlled": {
+          "estimate": 3.39,
+          "ci95": [
+            1.48,
+            5.3
+          ],
+          "p": 0.0005174091410569059
+        },
+        "matches_b1_summary": true
+      },
+      "vs_ideal": {
+        "estimate": 2.452,
+        "ci95_boot": [
+          1.22,
+          3.64
+        ],
+        "p_boot": 0.000199990000499975,
+        "ols_controlled": {
+          "estimate": 3.581,
+          "ci95": [
+            1.76,
+            5.4
+          ],
+          "p": 0.00011698654740461866
+        }
+      },
+      "hazard": {
+        "log_odds_maxeig": -0.724,
+        "ci95": [
+          -1.13,
+          -0.32
+        ],
+        "p": 0.0004734834368755045,
+        "note": "controls ln(codes remaining); negative = slower to solve after Max-EIG (human direction)"
+      },
+      "free_play_solve_rate": 0.44,
+      "free_play_eig_relative_to_max": 0.686,
+      "passes_solve_rate_rule": false,
+      "vs_people": {
+        "model_minus_people": 0.573,
+        "ci95_paired": [
+          -0.79,
+          1.91
+        ],
+        "share_of_human_effect": 1.3,
+        "share_ci95_paired": [
+          0.64,
+          2.63
+        ],
+        "note": "on excess guesses (ideal-relative); bootstrap paired by stimulus"
+      }
+    },
+    "phi-4": {
+      "games": 1130,
+      "solve_rate": 0.254,
+      "raw": {
+        "estimate": 1.94,
+        "ci95_boot": [
+          0.76,
+          3.14
+        ],
+        "ols_controlled": {
+          "estimate": 3.739,
+          "ci95": [
+            1.98,
+            5.5
+          ],
+          "p": 3.066508089827572e-05
+        },
+        "matches_b1_summary": true
+      },
+      "vs_ideal": {
+        "estimate": 2.528,
+        "ci95_boot": [
+          1.4,
+          3.68
+        ],
+        "p_boot": 9.99950002499875e-05,
+        "ols_controlled": {
+          "estimate": 3.93,
+          "ci95": [
+            2.23,
+            5.63
+          ],
+          "p": 5.714167028212126e-06
+        }
+      },
+      "hazard": {
+        "log_odds_maxeig": -1.063,
+        "ci95": [
+          -1.63,
+          -0.49
+        ],
+        "p": 0.0002505124392521443,
+        "note": "controls ln(codes remaining); negative = slower to solve after Max-EIG (human direction)"
+      },
+      "free_play_solve_rate": 0.19,
+      "free_play_eig_relative_to_max": 0.478,
+      "passes_solve_rate_rule": false,
+      "vs_people": {
+        "model_minus_people": 0.648,
+        "ci95_paired": [
+          -0.61,
+          1.9
+        ],
+        "share_of_human_effect": 1.34,
+        "share_ci95_paired": [
+          0.73,
+          2.59
+        ],
+        "note": "on excess guesses (ideal-relative); bootstrap paired by stimulus"
+      }
+    },
+    "olmo2-32b": {
+      "games": 1130,
+      "solve_rate": 0.085,
+      "raw": {
+        "estimate": 0.019,
+        "ci95_boot": [
+          -0.45,
+          0.49
+        ],
+        "ols_controlled": {
+          "estimate": 0.24,
+          "ci95": [
+            -0.45,
+            0.93
+          ],
+          "p": 0.4968056409021051
+        },
+        "matches_b1_summary": true
+      },
+      "vs_ideal": {
+        "estimate": 0.606,
+        "ci95_boot": [
+          0.12,
+          1.1
+        ],
+        "p_boot": 0.01609919504024799,
+        "ols_controlled": {
+          "estimate": 0.431,
+          "ci95": [
+            -0.22,
+            1.08
+          ],
+          "p": 0.19616839676693298
+        }
+      },
+      "hazard": {
+        "log_odds_maxeig": -0.322,
+        "ci95": [
+          -1.05,
+          0.41
+        ],
+        "p": 0.3857901353409525,
+        "note": "controls ln(codes remaining); negative = slower to solve after Max-EIG (human direction)"
+      },
+      "free_play_solve_rate": 0.03,
+      "free_play_eig_relative_to_max": 0.585,
+      "passes_solve_rate_rule": false,
+      "vs_people": {
+        "model_minus_people": -1.273,
+        "ci95_paired": [
+          -2.16,
+          -0.36
+        ],
+        "share_of_human_effect": 0.32,
+        "share_ci95_paired": [
+          0.07,
+          0.68
+        ],
+        "note": "on excess guesses (ideal-relative); bootstrap paired by stimulus"
+      }
+    },
+    "gpt-oss-120b": {
+      "games": 1130,
+      "solve_rate": 0.996,
+      "raw": {
+        "estimate": 0.225,
+        "ci95_boot": [
+          -0.24,
+          0.69
+        ],
+        "ols_controlled": {
+          "estimate": 0.993,
+          "ci95": [
+            0.5,
+            1.49
+          ],
+          "p": 8.230846628561715e-05
+        },
+        "matches_b1_summary": true
+      },
+      "vs_ideal": {
+        "estimate": 0.813,
+        "ci95_boot": [
+          0.41,
+          1.23
+        ],
+        "p_boot": 9.99950002499875e-05,
+        "ols_controlled": {
+          "estimate": 1.184,
+          "ci95": [
+            0.65,
+            1.72
+          ],
+          "p": 1.3327705304317376e-05
+        }
+      },
+      "hazard": {
+        "log_odds_maxeig": -0.615,
+        "ci95": [
+          -0.88,
+          -0.35
+        ],
+        "p": 3.938549103677174e-06,
+        "note": "controls ln(codes remaining); negative = slower to solve after Max-EIG (human direction)"
+      },
+      "free_play_solve_rate": 0.98,
+      "free_play_eig_relative_to_max": 0.848,
+      "passes_solve_rate_rule": true,
+      "vs_people": {
+        "model_minus_people": -1.067,
+        "ci95_paired": [
+          -1.92,
+          -0.18
+        ],
+        "share_of_human_effect": 0.43,
+        "share_ci95_paired": [
+          0.23,
+          0.83
+        ],
+        "note": "on excess guesses (ideal-relative); bootstrap paired by stimulus"
+      }
+    },
+    "claude-haiku-5-5": {
+      "games": 1130,
+      "solve_rate": 1.0,
+      "raw": {
+        "estimate": -0.556,
+        "ci95_boot": [
+          -0.9,
+          -0.21
+        ],
+        "ols_controlled": {
+          "estimate": 0.045,
+          "ci95": [
+            -0.24,
+            0.33
+          ],
+          "p": 0.7595752900122164
+        },
+        "matches_b1_summary": true
+      },
+      "vs_ideal": {
+        "estimate": 0.032,
+        "ci95_boot": [
+          -0.23,
+          0.3
+        ],
+        "p_boot": 0.8244587770611469,
+        "ols_controlled": {
+          "estimate": 0.235,
+          "ci95": [
+            -0.16,
+            0.63
+          ],
+          "p": 0.2466074188285401
+        }
+      },
+      "hazard": {
+        "log_odds_maxeig": -0.091,
+        "ci95": [
+          -0.35,
+          0.17
+        ],
+        "p": 0.4965193726202083,
+        "note": "controls ln(codes remaining); negative = slower to solve after Max-EIG (human direction)"
+      },
+      "free_play_solve_rate": 1.0,
+      "free_play_eig_relative_to_max": 0.904,
+      "passes_solve_rate_rule": true,
+      "vs_people": {
+        "model_minus_people": -1.848,
+        "ci95_paired": [
+          -2.76,
+          -0.9
+        ],
+        "share_of_human_effect": 0.02,
+        "share_ci95_paired": [
+          -0.15,
+          0.17
+        ],
+        "note": "on excess guesses (ideal-relative); bootstrap paired by stimulus"
+      }
+    },
+    "claude-opus-5-5": {
+      "games": 1130,
+      "solve_rate": 1.0,
+      "raw": {
+        "estimate": -0.785,
+        "ci95_boot": [
+          -1.06,
+          -0.5
+        ],
+        "ols_controlled": {
+          "estimate": -0.098,
+          "ci95": [
+            -0.28,
+            0.09
+          ],
+          "p": 0.2969944684941843
+        },
+        "matches_b1_summary": true
+      },
+      "vs_ideal": {
+        "estimate": -0.198,
+        "ci95_boot": [
+          -0.37,
+          -0.03
+        ],
+        "p_boot": 0.02369881505924704,
+        "ols_controlled": {
+          "estimate": 0.093,
+          "ci95": [
+            -0.18,
+            0.36
+          ],
+          "p": 0.49815953808517366
+        }
+      },
+      "hazard": {
+        "log_odds_maxeig": 0.816,
+        "ci95": [
+          0.38,
+          1.25
+        ],
+        "p": 0.00022213155356251555,
+        "note": "controls ln(codes remaining); negative = slower to solve after Max-EIG (human direction)"
+      },
+      "free_play_solve_rate": 1.0,
+      "free_play_eig_relative_to_max": 0.942,
+      "passes_solve_rate_rule": true,
+      "vs_people": {
+        "model_minus_people": -2.077,
+        "ci95_paired": [
+          -2.98,
+          -1.14
+        ],
+        "share_of_human_effect": -0.11,
+        "share_ci95_paired": [
+          -0.27,
+          -0.01
+        ],
+        "note": "on excess guesses (ideal-relative); bootstrap paired by stimulus"
+      }
+    }
+  },
+  "holm_vs_ideal": {
+    "all_six_models": {
+      "phi-4": 0.0006,
+      "gpt-oss-120b": 0.0006,
+      "qwen3-32b": 0.0008,
+      "olmo2-32b": 0.048298,
+      "claude-opus-5-5": 0.048298,
+      "claude-haiku-5-5": 0.824459
+    },
+    "solve_rate_rule_models_only": {
+      "gpt-oss-120b": 0.0003,
+      "claude-opus-5-5": 0.047398,
+      "claude-haiku-5-5": 0.824459
+    },
+    "note": "two-sided bootstrap p for the ideal-relative effect; alpha = 0.05"
+  },
+  "capability_gradient": {
+    "order": "models by free-play query quality (mean EIG relative to the best query; ideal = 1)",
+    "rows": [
+      {
+        "model": "phi-4",
+        "eig_relative_to_max": 0.478,
+        "vs_ideal": 2.528,
+        "ci95": [
+          1.4,
+          3.68
+        ],
+        "share_of_human_effect": 1.34
+      },
+      {
+        "model": "olmo2-32b",
+        "eig_relative_to_max": 0.585,
+        "vs_ideal": 0.606,
+        "ci95": [
+          0.12,
+          1.1
+        ],
+        "share_of_human_effect": 0.32
+      },
+      {
+        "model": "qwen3-32b",
+        "eig_relative_to_max": 0.686,
+        "vs_ideal": 2.452,
+        "ci95": [
+          1.22,
+          3.64
+        ],
+        "share_of_human_effect": 1.3
+      },
+      {
+        "model": "gpt-oss-120b",
+        "eig_relative_to_max": 0.848,
+        "vs_ideal": 0.813,
+        "ci95": [
+          0.41,
+          1.23
+        ],
+        "share_of_human_effect": 0.43
+      },
+      {
+        "model": "claude-haiku-5-5",
+        "eig_relative_to_max": 0.904,
+        "vs_ideal": 0.032,
+        "ci95": [
+          -0.23,
+          0.3
+        ],
+        "share_of_human_effect": 0.02
+      },
+      {
+        "model": "claude-opus-5-5",
+        "eig_relative_to_max": 0.942,
+        "vs_ideal": -0.198,
+        "ci95": [
+          -0.37,
+          -0.03
+        ],
+        "share_of_human_effect": -0.11
+      }
+    ],
+    "spearman_capability_vs_effect": -0.829,
+    "note": "six models: descriptive only"
+  }
+}
