@@ -41,6 +41,8 @@ done
 # Runs after B1b because its capability table reads the B1b summaries.
 MODELS=$(ls results/study_b/b1/*_e1_T0.jsonl | xargs -n1 basename | sed 's/_e1_T0.jsonl//' | tr '\n' ' ')
 run experiments/study_b/analyze_b1.py --models $MODELS
+# B1 re-analysis (post hoc): every model, relative to the ideal player, paired with people; reads b1_summary.json
+run experiments/study_b/b1_reanalysis.py
 # B2/B3: error profile, intervals, recovery, the pre-stated confirmation, native choice
 run experiments/study_b/fit_process_models.py profile --model qwen3-32b --conditions T0
 run experiments/study_b/fit_process_models.py intervals --model qwen3-32b --condition T0
